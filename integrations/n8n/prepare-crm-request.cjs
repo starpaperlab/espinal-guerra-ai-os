@@ -50,7 +50,14 @@ function prepareCrmRequest(input, secret, now = Date.now()) {
     )
   )
     throw new Error("CRM_EVALUATION_INCOMPLETE");
-  const text = (key) => (input[key] == null ? "" : String(input[key]));
+  const text = (key) => {
+    const value = input[key];
+    if (value == null) return "";
+    if (typeof value === "string") return value;
+    if (key === "budget" && typeof value === "number" && Number.isFinite(value))
+      return String(value);
+    throw new Error(`CRM_TEXT_FIELD:${key}`);
+  };
   const event = {
     type: "lead.created",
     event_id: input.event_id,

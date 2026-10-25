@@ -152,6 +152,18 @@ test("Adaptador no inventa IDs, fechas, marca, evaluación, secretos ni flag de 
     ),
   );
 });
+test("Un mapeo de texto a un objeto falla sin guardar [object Object]", () => {
+  assert.throws(() =>
+    prepareCrmRequest(
+      { ...event(), message: { nested: "not a message" } },
+      secret,
+      now,
+    ),
+  );
+  assert.throws(() =>
+    prepareCrmRequest({ ...event(), budget: Number.NaN }, secret, now),
+  );
+});
 test("Errores correlacionados no exponen payload, firma, correo ni secreto y bloquean escrituras sin migración", async () => {
   const logs: unknown[] = [];
   let calls = 0;
