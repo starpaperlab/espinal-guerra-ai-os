@@ -83,3 +83,18 @@ Las pruebas HTTP levantan temporalmente el build de producción en el puerto 318
 5. Verificar: usuario anónimo → login; usuario sin membresía → acceso pendiente; miembro autorizado → panel; cierre de sesión → rutas bloqueadas. Confirmar aislamiento con dos organizaciones antes de registrar datos reales.
 
 No se ha desplegado esta aplicación ni se ha conectado una base de producción.
+
+## Fase 1.1 · Legibilidad
+
+La escala tipográfica está centralizada en `src/app/globals.css`: base 16 px, texto auxiliar mínimo 14 px, enlaces de marcas 15 px, navegación y controles 16 px, nombres de marcas 18 px, secciones 22 px y títulos principales de 28–34 px. Los tamaños se expresan en rem y respetan la preferencia tipográfica del navegador. Las tarjetas redistribuyen el contenido sin alturas rígidas; el menú móvil se activa también en tabletas.
+
+Pruebas de presentación (después del build):
+
+```bash
+npx playwright install chromium
+npm run test:ui
+# Si Chromium ya está instalado en el sistema:
+CHROMIUM_PATH=/usr/bin/chromium npm run test:ui
+```
+
+La prueba renderiza los componentes reales de los ocho módulos, inicio de sesión con error y configuración pendiente en una **vista aislada solo de pruebas**, a 320, 390, 768, 1024, 1440 y 1920 px. Comprueba tamaño mínimo, desbordamientos, áreas interactivas y pares de contraste AA (4.5:1), y guarda capturas en `test-results/legibility/`. Los adaptadores de navegación y acciones se sustituyen únicamente dentro del proceso de pruebas; no hay ruta de demostración ni cambios en la autenticación de la aplicación. La vista de prueba no conecta Supabase ni envía formularios. Las once pruebas HTTP existentes siguen verificando el bloqueo de las rutas privadas.
