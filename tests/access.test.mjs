@@ -7,6 +7,9 @@ before(async () => {
   const env = { ...process.env, NEXT_TELEMETRY_DISABLED: "1" };
   delete env.NEXT_PUBLIC_SUPABASE_URL;
   delete env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  delete env.SUPABASE_SERVICE_ROLE_KEY;
+  delete env.CRM_WEBHOOK_SECRET;
+  delete env.CRM_WEBHOOK_ORGANIZATION_ID;
   server = spawn(
     process.execPath,
     [
@@ -83,4 +86,14 @@ test("Inicio dirige al panel protegido", async () => {
   const response = await fetch(base, { redirect: "manual" });
   assert.equal(response.status, 307);
   assert.equal(response.headers.get("location"), "/dashboard");
+});
+
+test("Receptor n8n sin configuración no acepta escrituras", async () => {
+  const response = await fetch(base + "/api/integrations/n8n/leads", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{}",
+  });
+  assert.equal(response.status, 503);
+  assert.match(await response.text(), /no configurada/);
 });

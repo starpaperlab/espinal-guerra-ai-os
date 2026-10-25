@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { BrandPortfolio } from "./brand-portfolio";
 import { CorporateIdentity } from "./corporate-identity";
 import Link from "next/link";
@@ -35,10 +36,14 @@ export function Workspace({
   module,
   brandId,
   email,
+  children,
+  headerControl,
 }: {
   module: Module;
   brandId?: string;
   email?: string;
+  children?: ReactNode;
+  headerControl?: ReactNode;
 }) {
   const brand = selectedBrand(brandId);
   const suffix = brand ? `?marca=${brand.id}` : "";
@@ -119,7 +124,7 @@ export function Workspace({
               <h1>{module.name}</h1>
               <p className="muted">{module.description}</p>
             </div>
-            <BrandSelector value={brand?.id} />
+            {headerControl ?? <BrandSelector value={brand?.id} />}
           </div>
           {module.slug === "dashboard" ? (
             <>
@@ -301,6 +306,8 @@ export function Workspace({
             </>
           ) : module.slug === "marcas" ? (
             <BrandPortfolio brandId={brand?.id} />
+          ) : children ? (
+            children
           ) : (
             <section className="card module-empty">
               <span className="soft-icon">

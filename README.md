@@ -130,3 +130,13 @@ Verificar después de integrar:
 Un build local correcto o un push aceptado no prueban que Vercel esté Ready. Si no hay acceso a Vercel o una sesión real autorizada, registrar la limitación y completar esa comprobación manualmente; no declarar autenticación ni datos de Production verificados.
 
 Esta fase termina los ajustes visuales. Ventas/CRM, inteligencia artificial y automatizaciones corresponden a la Fase 2 y no se implementan aquí.
+
+## Etapa 2.1 · Ventas y CRM
+
+El módulo `/ventas` incorpora persistencia Supabase para contactos, prospectos, oportunidades, actividades, propuestas e historial; indicadores SQL de registros reales, filtros por UUID de marcas existentes y pipeline con guardado real. No usa datos de demostración ni depende de Sheets.
+
+**Habilitación necesaria:** aplicar una sola vez `supabase/migrations/202610250002_crm.sql` al proyecto existente, después de revisar su esquema. No recrear la fundación, organizaciones ni marcas. Si la migración no está aplicada, el módulo lo indica y no simula resultados.
+
+La [guía de instalación, seguridad, operación y conexión n8n](docs/crm-2.1.md) incluye la auditoría, el modelo, comprobaciones SQL, límites e instrucciones del receptor nuevo `/api/integrations/n8n/leads`. La integración n8n permanece sin conectar hasta configurar el secreto del servidor y realizar el mapeo autorizado del workflow existente. No se han modificado `/api/lead`, n8n, Google Sheets ni comunicaciones automáticas.
+
+Las pruebas del CRM usan PostgreSQL local aislado y las vistas de prueba solo existen en `tests/`. La migración y las operaciones en Production requieren comprobación en la instancia real; no se deducen de un build correcto. No se implementa la Etapa 2.2.
