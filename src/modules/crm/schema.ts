@@ -111,6 +111,13 @@ export const webhookSchema = z
     need: text(10000),
     score: z.number().int().min(0).max(100).nullable(),
     classification: z.enum(["HOT", "WARM", "COLD"]).nullable(),
+    priority: z.string().trim().max(50).nullable().default(null),
+    route_to_sales: z.boolean().nullable().default(null),
+    response_suggestion: text(10000),
+    scoring_breakdown: z
+      .record(z.string().min(1).max(100), z.number().finite().min(0).max(100))
+      .refine((v) => Object.keys(v).length <= 20)
+      .default({}),
     problem: text(10000),
     opportunity: text(10000),
     recommendation: text(10000),

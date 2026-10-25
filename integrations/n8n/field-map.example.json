@@ -21,7 +21,14 @@
     "recommendation": null,
     "next_action": null,
     "occurred_at": null,
-    "evaluated_at": null
+    "evaluated_at": null,
+    "priority": null,
+    "route_to_sales": null,
+    "response_suggestion": null,
+    "scoring_breakdown": null
   },
-  "constants": { "brand_id": null, "is_test": true }
+  "constants": {
+    "brand_id": null,
+    "is_test": true
+  }
 }

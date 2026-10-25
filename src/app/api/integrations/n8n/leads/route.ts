@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     organizationId: organizationId!,
     ensureReady: async () => {
       const { data, error } = await client.rpc("crm_inbound_contract_version");
-      return !error && data === 2;
+      return !error && data === 3;
     },
     report: (entry) =>
       console.warn(JSON.stringify({ event: "crm_webhook", ...entry })),

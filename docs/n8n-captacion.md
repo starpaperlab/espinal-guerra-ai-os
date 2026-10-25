@@ -26,7 +26,7 @@ La versión anterior no admitía campaña, mensaje, presupuesto ni urgencia en e
 
 Los campos nuevos son opcionales para mantener compatibilidad. No se actualizan retrospectivamente los registros existentes. La migración `202610250003_n8n_capture_fields.sql` solo reemplaza la función receptora y añade una función de versión; no crea tablas, no borra registros ni cambia flags de prueba. No se vuelve a ejecutar la migración 002.
 
-El receptor verifica `crm_inbound_contract_version() = 2` **antes de escribir**. Si falta la actualización o no se puede validar, devuelve 503 con código de diagnóstico `CONTRACT_NOT_READY`, evitando aceptar datos nuevos con una función antigua que omitiría campos.
+El receptor verifica `crm_inbound_contract_version() = 3` **antes de escribir**. Si falta la actualización o no se puede validar, devuelve 503 con código de diagnóstico `CONTRACT_NOT_READY`, evitando aceptar datos nuevos con una función antigua que omitiría campos.
 
 Los errores incluyen `request_id` y cabecera `X-CRM-Request-Id`. Los logs de Vercel contienen exclusivamente identificador aleatorio, estado HTTP y código acotado (`NOT_CONFIGURED`, `AUTH_INVALID`, `INVALID_PAYLOAD`, `CONTRACT_NOT_READY`, `DB_23505`, etc.). No se registran cuerpos, correos, tokens, firmas o mensajes SQL. Un error de validación indica las rutas de campos, sin sus valores.
 
@@ -44,12 +44,12 @@ No hace falta volver a ejecutar Gmail, Sheets o todo el workflow para obtener es
 
 En **el proyecto Supabase existente espinal-guerra-ai-os → SQL Editor**, ejecutar una vez el archivo completo:
 
-`supabase/migrations/202610250003_n8n_capture_fields.sql`
+`supabase/migrations/202610250003_n8n_capture_fields.sql` (si está pendiente), y después `supabase/migrations/202610250004_n8n_ai_assessment.sql`.
 
 Revisar primero que existe la migración 002 (ya aplicada según la administradora). No repetirla. La actualización 003 es transaccional y compatible con las tablas actuales. Después puede comprobarse como administrador:
 
 ```sql
-select public.crm_inbound_contract_version(); -- 2
+select public.crm_inbound_contract_version(); -- 3
 ```
 
 La función de versión y la receptora solo son ejecutables por el rol de servidor; los usuarios del navegador no obtienen ese permiso. No se crea otra organización, marca ni proyecto.
@@ -129,3 +129,7 @@ Si no está marcado como prueba, detener el envío y revisar el caso sin borrar 
 ## Evidencia de pruebas incluidas
 
 Las pruebas locales usan el adaptador real → receptor real → función SQL en PostgreSQL aislado (PGlite). Verifican campos completos, HOT/WARM/COLD, validación/firma, protección entre organizaciones/marcas, reintentos, identidad externa estable, preservación de filas al migrar, exclusión de pruebas, permisos del servidor y logs sin información sensible. No conectan n8n ni escriben en Supabase Production. La interfaz, autenticación y CRM manual permanecen sin cambios en esta etapa.
+
+## Actualización: estructura de Message a model confirmada
+
+La estructura del modelo fue suministrada después de esta auditoría inicial. Ya existe un lector y un mapa parcial para sus nueve campos, pero el OUTPUT de Code in JavaScript sigue sin verificarse. Consultar [respuesta del modelo y recomendaciones no confirmadas](n8n-model-output.md). El contrato actual es 3 y requiere la migración 004; las sugerencias no activan comunicaciones, tareas o compromisos.

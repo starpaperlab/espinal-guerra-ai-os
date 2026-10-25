@@ -58,6 +58,30 @@ function prepareCrmRequest(input, secret, now = Date.now()) {
       return String(value);
     throw new Error(`CRM_TEXT_FIELD:${key}`);
   };
+  if (
+    input.priority != null &&
+    (typeof input.priority !== "string" || input.priority.length > 50)
+  )
+    throw new Error("CRM_PRIORITY_INVALID");
+  if (input.route_to_sales != null && typeof input.route_to_sales !== "boolean")
+    throw new Error("CRM_ROUTE_FLAG_INVALID");
+  const breakdown = input.scoring_breakdown ?? {};
+  if (
+    !breakdown ||
+    typeof breakdown !== "object" ||
+    Array.isArray(breakdown) ||
+    Object.keys(breakdown).length > 20 ||
+    Object.entries(breakdown).some(
+      ([k, v]) =>
+        !k ||
+        k.length > 100 ||
+        typeof v !== "number" ||
+        !Number.isFinite(v) ||
+        v < 0 ||
+        v > 100,
+    )
+  )
+    throw new Error("CRM_BREAKDOWN_INVALID");
   const event = {
     type: "lead.created",
     event_id: input.event_id,
@@ -78,6 +102,10 @@ function prepareCrmRequest(input, secret, now = Date.now()) {
     need: text("need"),
     score,
     classification,
+    priority: input.priority ?? null,
+    route_to_sales: input.route_to_sales ?? null,
+    response_suggestion: text("response_suggestion"),
+    scoring_breakdown: breakdown,
     problem: text("problem"),
     opportunity: text("opportunity"),
     recommendation: text("recommendation"),
@@ -119,6 +147,10 @@ function prepareMappedCrmRequest(source, mapping, secret, now = Date.now()) {
     "need",
     "score",
     "classification",
+    "priority",
+    "route_to_sales",
+    "response_suggestion",
+    "scoring_breakdown",
     "problem",
     "opportunity",
     "recommendation",

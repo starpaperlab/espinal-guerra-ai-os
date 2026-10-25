@@ -441,6 +441,38 @@ test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t)
         });
       },
     );
+    await t.test(
+      "Migración IA conserva los registros previos y habilita solo metadatos de recomendación",
+      async () => {
+        const before = (
+          await db.query(
+            "select id,is_test,stage,next_action from crm_leads order by id",
+          )
+        ).rows;
+        await db.exec(
+          await readFile(
+            "supabase/migrations/202610250004_n8n_ai_assessment.sql",
+            "utf8",
+          ),
+        );
+        assert.deepEqual(
+          (
+            await db.query(
+              "select id,is_test,stage,next_action from crm_leads order by id",
+            )
+          ).rows,
+          before,
+        );
+        assert.equal(
+          (
+            await db.query<{ v: number }>(
+              "select crm_inbound_contract_version() v",
+            )
+          ).rows[0].v,
+          3,
+        );
+      },
+    );
     const secret = randomBytes(48).toString("hex");
     const event = {
       event_id: randomUUID(),
@@ -656,6 +688,68 @@ test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t)
           ).rows[0].s;
           assert.equal(summary.hot, 1);
         });
+      },
+    );
+    await t.test(
+      "La evaluación recibida se persiste como sugerencia, sin crear tareas, compromisos ni ventas",
+      async () => {
+        const before = (
+          await db.query<{ n: number }>(
+            "select count(*)::integer n from crm_activities",
+          )
+        ).rows[0].n;
+        const input = {
+          ...event,
+          event_id: randomUUID(),
+          external_id: randomUUID(),
+          priority: "MEDIUM",
+          route_to_sales: true,
+          response_suggestion: "Reunión y precio sugeridos, no confirmados",
+          scoring_breakdown: {
+            pain_clarity: 16,
+            commercial_fit: 12,
+            budget_strength: 6,
+            urgency: 18,
+            business_impact: 8,
+          },
+          next_action: "",
+        };
+        const response = await receiveLead(request(input), deps);
+        assert.equal(response.status, 200);
+        const result = await response.json();
+        const row = (
+          await db.query<{
+            ai_metadata: Record<string, unknown>;
+            stage: string;
+            next_action: string;
+            budget: string;
+          }>(
+            "select ai_metadata,stage,next_action,budget from crm_leads where id=$1",
+            [result.lead_id],
+          )
+        ).rows[0];
+        assert.equal(row.ai_metadata.content_kind, "ai_recommendation");
+        assert.equal(row.ai_metadata.priority, input.priority);
+        assert.equal(row.ai_metadata.route_to_sales, true);
+        assert.equal(
+          row.ai_metadata.response_suggestion,
+          input.response_suggestion,
+        );
+        assert.deepEqual(
+          row.ai_metadata.scoring_breakdown,
+          input.scoring_breakdown,
+        );
+        assert.equal(row.stage, "nuevo");
+        assert.equal(row.next_action, "");
+        assert.equal(row.budget, "");
+        assert.equal(
+          (
+            await db.query<{ n: number }>(
+              "select count(*)::integer n from crm_activities",
+            )
+          ).rows[0].n,
+          before,
+        );
       },
     );
     await t.test(

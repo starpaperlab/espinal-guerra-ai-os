@@ -148,3 +148,9 @@ Se reutiliza `POST /api/integrations/n8n/leads`. La [guía de captación](docs/n
 Aplicar una vez `supabase/migrations/202610250003_n8n_capture_fields.sql` para persistir campaña, mensaje, presupuesto y urgencia. El receptor verifica la versión SQL antes de escribir; sin esta actualización no acepta eventos nuevos para evitar omitir campos. Las tablas y registros anteriores se conservan. Los errores exponen únicamente un ID de correlación y datos de diagnóstico seguros.
 
 `integrations/n8n/field-map.example.json` debe completarse con las rutas verificadas del JSON real del nodo **Code in JavaScript**; sus valores `null` no son una configuración activa. El helper de firma se prueba en local, pero no está conectado al n8n real. No enviar pruebas como prospectos reales ni incluir secretos en los archivos.
+
+## Respuesta real del modelo · continuación de 2.2.1
+
+Se preparó un lector estricto de `output → content[type=output_text] → text(JSON)` y un mapa parcial de los nueve campos confirmados por la administradora. No se considera ese sobre como payload final del workflow: falta verificar el OUTPUT de Code in JavaScript y el contacto del Webhook de la misma ejecución.
+
+La migración `202610250004_n8n_ai_assessment.sql`, después de la 003, conserva prioridad, señal de routing, texto sugerido y desglose en `ai_metadata` como recomendaciones no confirmadas. El contrato avanza a 3 y se verifica antes de escribir. No se crean tareas, citas, precios, propuestas ni envíos desde ese contenido. No se modificó el workflow. [Detalles y siguiente dato necesario](docs/n8n-model-output.md).

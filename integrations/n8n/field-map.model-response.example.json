@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "paths": {
+    "event_id": null,
+    "external_id": null,
+    "contact.name": null,
+    "contact.email": null,
+    "contact.phone": null,
+    "contact.company": null,
+    "source": null,
+    "campaign": null,
+    "service": null,
+    "message": null,
+    "need": null,
+    "budget": null,
+    "urgency": null,
+    "score": "assessment.lead_score",
+    "classification": "assessment.classification",
+    "problem": "assessment.main_problem",
+    "opportunity": "assessment.commercial_opportunity",
+    "recommendation": "assessment.recommended_action",
+    "next_action": null,
+    "occurred_at": null,
+    "evaluated_at": null,
+    "priority": "assessment.priority",
+    "route_to_sales": "assessment.route_to_sales",
+    "response_suggestion": "assessment.response_suggestion",
+    "scoring_breakdown": "assessment.scoring_breakdown"
+  },
+  "constants": {
+    "brand_id": null,
+    "is_test": true
+  }
+}
