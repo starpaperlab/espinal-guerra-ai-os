@@ -1,3 +1,4 @@
+import { CorporateIdentity } from "./corporate-identity";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -42,15 +43,8 @@ export function Workspace({
   const suffix = brand ? `?marca=${brand.id}` : "";
   const navigation = (
     <>
-      <div className="wordmark">
-        <div className="logo-mark">
-          EG<span>✦</span>
-        </div>
-        <div>
-          ESPINAL GUERRA<small>AI OPERATING SYSTEM</small>
-        </div>
-      </div>
-      <p className="nav-label">WORKSPACE</p>
+      <CorporateIdentity />
+      <p className="nav-label">ESPACIO DE TRABAJO</p>
       <nav aria-label="Navegación principal">
         {modules.map((m) => {
           const Icon = icons[m.icon];
@@ -84,11 +78,15 @@ export function Workspace({
   );
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#contenido-principal">
+        Saltar al contenido
+      </a>
       <aside className="sidebar">{navigation}</aside>
       <div className="main-shell">
         <header className="topbar">
           <span className="breadcrumb">
-            Espinal Guerra <span>/</span> <strong>{module.name}</strong>
+            Grupo Empresarial Espinal Guerra <span>/</span>{" "}
+            <strong>{module.name}</strong>
           </span>
           <div className="header-right">
             <span className="private-badge">
@@ -113,7 +111,7 @@ export function Workspace({
           </summary>
           {navigation}
         </details>
-        <main className="content">
+        <main className="content" id="contenido-principal">
           <div className="page-heading">
             <div>
               <p className="eyebrow">CENTRO DE CONTROL</p>
@@ -124,6 +122,17 @@ export function Workspace({
           </div>
           {module.slug === "dashboard" ? (
             <>
+              <p className="personal-welcome">
+                Bienvenida a tu centro de dirección
+                {email ? (
+                  <>
+                    {" "}
+                    · <span>{email}</span>
+                  </>
+                ) : (
+                  "."
+                )}
+              </p>
               <section className="welcome-banner">
                 <div>
                   <span className="banner-label">
@@ -146,10 +155,10 @@ export function Workspace({
                   <div className="orbit orbit-one" />
                   <div className="orbit orbit-two" />
                   <div className="art-center">
-                    EG<span>✦</span>
+                    <Layers3 size={48} />
                   </div>
                   <span className="art-label">
-                    UN GRUPO. MÚLTIPLES POSIBILIDADES.
+                    VISIÓN. ESTRATEGIA. CRECIMIENTO.
                   </span>
                 </div>
               </section>
@@ -193,6 +202,65 @@ export function Workspace({
                     <small>{item.note}</small>
                   </article>
                 ))}
+              </section>
+              <section className="quick-access" aria-label="Accesos rápidos">
+                <h2>Accesos rápidos</h2>
+                <div className="quick-access-links">
+                  {modules
+                    .filter((m) =>
+                      [
+                        "ventas",
+                        "marketing",
+                        "operaciones",
+                        "finanzas",
+                      ].includes(m.slug),
+                    )
+                    .map((m) => {
+                      const Icon = icons[m.icon];
+                      return (
+                        <Link
+                          className="button secondary"
+                          href={`/${m.slug}${suffix}`}
+                          key={m.slug}
+                        >
+                          <Icon size={20} />
+                          {m.name}
+                          <ArrowUpRight size={16} />
+                        </Link>
+                      );
+                    })}
+                </div>
+              </section>
+              <section
+                className="business-summary"
+                aria-label="Resumen empresarial"
+              >
+                <article className="card summary-card">
+                  <span className="soft-icon">
+                    <UsersRound size={24} />
+                  </span>
+                  <h2>Resumen comercial</h2>
+                  <p>
+                    No hay ventas ni prospectos conectados. El resumen estará
+                    disponible cuando se incorporen fuentes autorizadas.
+                  </p>
+                  <Link className="text-link" href={`/ventas${suffix}`}>
+                    Ir a Ventas y CRM <ArrowRight size={18} />
+                  </Link>
+                </article>
+                <article className="card summary-card">
+                  <span className="soft-icon">
+                    <Workflow size={24} />
+                  </span>
+                  <h2>Estado de operaciones</h2>
+                  <p>
+                    Sin procesos registrados. Este espacio mostrará el estado
+                    operativo cuando existan datos reales.
+                  </p>
+                  <Link className="text-link" href={`/operaciones${suffix}`}>
+                    Ir a Operaciones <ArrowRight size={18} />
+                  </Link>
+                </article>
               </section>
               <BrandGrid brandId={brand?.id} />
               <section className="lower-grid">
@@ -295,7 +363,7 @@ function BrandGrid({ brandId }: { brandId?: string }) {
               href={`/dashboard?marca=${b.id}`}
             >
               <div className="brand-card-top">
-                <span className={`brand-avatar ${b.color}`}>{b.initials}</span>
+                <span className="brand-avatar">{b.initials}</span>
                 <ArrowUpRight size={18} />
               </div>
               <h3>{b.name}</h3>

@@ -1,3 +1,4 @@
+import { CorporateIdentity } from "./corporate-identity";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 export function StatusScreen({
@@ -10,9 +11,7 @@ export function StatusScreen({
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="logo-mark">
-          EG<span>✦</span>
-        </div>
+        <CorporateIdentity />
         <p className="eyebrow">ESPINAL GUERRA · AI OS</p>
         <ShieldCheck className="status-icon" aria-hidden="true" />
         <h1>{title}</h1>

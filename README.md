@@ -98,3 +98,13 @@ CHROMIUM_PATH=/usr/bin/chromium npm run test:ui
 ```
 
 La prueba renderiza los componentes reales de los ocho módulos, inicio de sesión con error y configuración pendiente en una **vista aislada solo de pruebas**, a 320, 390, 768, 1024, 1440 y 1920 px. Comprueba tamaño mínimo, desbordamientos, áreas interactivas y pares de contraste AA (4.5:1), y guarda capturas en `test-results/legibility/`. Los adaptadores de navegación y acciones se sustituyen únicamente dentro del proceso de pruebas; no hay ruta de demostración ni cambios en la autenticación de la aplicación. La vista de prueba no conecta Supabase ni envía formularios. Las once pruebas HTTP existentes siguen verificando el bloqueo de las rutas privadas.
+
+## Identidad corporativa oficial · Fase 1.1
+
+Paleta: azul profundo `#0A1F44`, corporativo `#1E3A6D`, medio `#4A6FA5`, claro `#E6ECF4`, fondo `#F7F9FC` y texto `#2B2F33`. Se sustituyó la identidad morada por estos colores. El azul medio identifica bordes, iconos y selección; el texto activo usa azul corporativo sobre azul claro para conservar contraste AA.
+
+Montserrat se usa en títulos, subtítulos y métricas; Poppins en cuerpo, menús, formularios y controles. Se distribuyen mediante paquetes Fontsource con licencias OFL, servidas desde la aplicación: no se contacta Google Fonts en ejecución ni durante el build. Pesos cargados: Montserrat 500/600/700 y Poppins 400/500/600/700. Escala actual: H1 32–40 px, H2 26–32 px, H3 20 px, cuerpo/menú/formularios 16 px, descripciones y enlaces 15–16 px, auxiliares desde 14 px. Esta escala sustituye la escala anterior documentada arriba.
+
+`src/components/corporate-identity.tsx` centraliza el identificador. No se recibió el archivo gráfico original ni una imagen de referencia con la solicitud: se utiliza texto identificado como provisional, sin recrear el isotipo de alas. Cuando esté disponible el original autorizado, guárdalo en `public/brand/` y proporciona su ruta mediante `logoSrc` a `CorporateIdentity` en el sidebar y la pantalla de acceso. Mantén el original sin alteraciones y un contraste adecuado sobre fondo azul y blanco.
+
+El panel añade bienvenida con el correo de la sesión ya disponible, accesos rápidos a módulos existentes, resumen comercial y estado operativo. Los nuevos bloques son estados vacíos, sin métricas ficticias, consultas o automatizaciones. Las pruebas de presentación verifican los diez espacios a seis anchos, la carga de ambas fuentes y nueve pares de contraste AA. Se conserva la barrera de autorización existente.

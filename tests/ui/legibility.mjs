@@ -74,12 +74,29 @@ try {
     executablePath: process.env.CHROMIUM_PATH || undefined,
   });
   const page = await browser.newPage();
+  await page.route("https://fixture.local/**", async (route) => {
+    const filename = new URL(route.request().url()).pathname.split("/").pop();
+    if (!/^[a-zA-Z0-9._-]+\.woff2?$/.test(filename || "")) return route.abort();
+    await route.fulfill({
+      body: await readFile(join(".next/static/media", filename)),
+      contentType: filename.endsWith("woff2") ? "font/woff2" : "font/woff",
+    });
+  });
   let checks = 0;
   for (const width of [320, 390, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     for (const [name, html] of Object.entries(screens)) {
       await page.setContent(
-        `<!doctype html><html lang="es"><head><style>${css}</style></head><body>${html}</body></html>`,
+        `<!doctype html><html lang="es"><head><base href="https://fixture.local/_next/static/chunks/"><style>${css}</style></head><body>${html}</body></html>`,
+      );
+      await page.evaluate(() => document.fonts.ready);
+      assert.ok(
+        await page.evaluate(
+          () =>
+            document.fonts.check("16px Poppins") &&
+            document.fonts.check("600 32px Montserrat"),
+        ),
+        "Corporate fonts must load",
       );
       if (width <= 1024 && name !== "login" && name !== "pending")
         await page.locator(".mobile-nav").evaluate((el) => {
@@ -132,7 +149,7 @@ try {
             .locator(".brand-card h3")
             .first()
             .evaluate((el) => getComputedStyle(el).fontSize),
-          "18px",
+          "20px",
         );
       }
       if (
@@ -143,17 +160,30 @@ try {
           path: join(output, `${name}-${width}.png`),
           fullPage: true,
         });
+      if (name === "dashboard" && width === 1440) {
+        await page.keyboard.press("Tab");
+        assert.equal(
+          await page.evaluate(() => document.activeElement.className),
+          "skip-link",
+        );
+        assert.notEqual(
+          await page
+            .locator(".skip-link")
+            .evaluate((el) => getComputedStyle(el).outlineStyle),
+          "none",
+        );
+        await page.keyboard.press("Tab");
+        assert.equal(
+          await page.evaluate(() =>
+            document.activeElement.getAttribute("aria-current"),
+          ),
+          "page",
+        );
+      }
       checks++;
     }
   }
   // WCAG AA normal-text threshold for the actual palette, including tinted surfaces.
-  const colors = await page.evaluate(() => {
-    const style = getComputedStyle(document.documentElement);
-    return {
-      muted: style.getPropertyValue("--muted").trim(),
-      purple: style.getPropertyValue("--purple").trim(),
-    };
-  });
   const luminance = (hex) => {
     const rgb = hex
       .replace("#", "")
@@ -163,16 +193,14 @@ try {
     return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
   };
   const pairs = [
-    [colors.muted, "#ffffff"],
-    [colors.muted, "#f7f8fb"],
-    [colors.muted, "#eeeaf8"],
-    [colors.purple, "#f0ecfa"],
-    ["#ffffff", "#7560ae"],
-    ["#b8b2c7", "#3c3450"],
-    ["#67518e", "#ede8fa"],
-    ["#426387", "#e9effa"],
-    ["#8d4b65", "#f9ebee"],
-    ["#805c2d", "#fbf0e5"],
+    ["#2b2f33", "#ffffff"],
+    ["#1e3a6d", "#f7f9fc"],
+    ["#1e3a6d", "#e6ecf4"],
+    ["#0a1f44", "#ffffff"],
+    ["#ffffff", "#0a1f44"],
+    ["#ffffff", "#1e3a6d"],
+    ["#e6ecf4", "#0a1f44"],
+    ["#e6ecf4", "#1e3a6d"],
     ["#9b3044", "#ffffff"],
   ];
   for (const [fg, bg] of pairs) {
