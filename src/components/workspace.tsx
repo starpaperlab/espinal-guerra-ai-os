@@ -1,3 +1,4 @@
+import { BrandLogo } from "./brand-logo";
 import { CorporateIdentity } from "./corporate-identity";
 import Link from "next/link";
 import {
@@ -357,13 +358,9 @@ function BrandGrid({ brandId }: { brandId?: string }) {
         {brands
           .filter((b) => !brandId || b.id === brandId)
           .map((b) => (
-            <Link
-              className="card brand-card"
-              key={b.id}
-              href={`/dashboard?marca=${b.id}`}
-            >
+            <Link className="card brand-card" key={b.id} href={b.href}>
               <div className="brand-card-top">
-                <span className="brand-avatar">{b.initials}</span>
+                <BrandLogo name={b.name} initials={b.initials} logo={b.logo} />
                 <ArrowUpRight size={18} />
               </div>
               <h3>{b.name}</h3>
@@ -377,6 +374,26 @@ function BrandGrid({ brandId }: { brandId?: string }) {
             </Link>
           ))}
       </div>
+      <section
+        className="portfolio-section"
+        aria-labelledby="portfolio-heading"
+      >
+        <div className="section-heading">
+          <h2 id="portfolio-heading">Portafolio empresarial</h2>
+          <span>El ecosistema Espinal Guerra</span>
+        </div>
+        <div className="portfolio-grid">
+          {brands.map((b) => (
+            <Link className="card portfolio-card" href={b.href} key={b.slug}>
+              <BrandLogo name={b.name} initials={b.initials} logo={b.logo} />
+              <h3>{b.name}</h3>
+              <span className="portfolio-link">
+                Ver espacio <ArrowUpRight size={16} />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }

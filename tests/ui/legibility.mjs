@@ -6,6 +6,21 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
+// Normalize Next's CJS image export for esbuild; retain the real Image implementation.
+const imageInterop = {
+  name: "next-image-interop",
+  setup(build) {
+    build.onResolve({ filter: /^next\/image$/ }, () => ({
+      path: "next-image",
+      namespace: "image-interop",
+    }));
+    build.onLoad({ filter: /.*/, namespace: "image-interop" }, () => ({
+      resolveDir: process.cwd(),
+      contents:
+        'export { Image as default } from "next/dist/client/image-component.js";',
+    }));
+  },
+};
 const temporary = await mkdtemp(join(tmpdir(), "eg-legibility-"));
 const output = resolve("test-results/legibility");
 await mkdir(output, { recursive: true });
@@ -33,6 +48,7 @@ try {
     jsx: "automatic",
     outfile: join(temporary, "fixture.mjs"),
     plugins: [
+      imageInterop,
       {
         name: "presentation-only",
         setup(build) {
@@ -183,6 +199,73 @@ try {
       checks++;
     }
   }
+  // Hydrate the real next/image component to exercise load/error and source replacement.
+  const interactive = await build({
+    stdin: {
+      contents: `import {createRoot} from 'react-dom/client'; import {BrandLogo} from './src/components/brand-logo';
+      const root = createRoot(document.getElementById('logo-test'));
+      window.renderBrand = logo => root.render(<BrandLogo name="Marca de prueba" initials="MP" logo={logo}/>);`,
+      resolveDir: process.cwd(),
+      loader: "tsx",
+    },
+    bundle: true,
+    platform: "browser",
+    format: "iife",
+    jsx: "automatic",
+    write: false,
+    plugins: [imageInterop],
+    define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" },
+  });
+  await page.route("https://fixture.local/brands/test-logo.svg", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><rect width="200" height="80" fill="#1E3A6D"/></svg>',
+    }),
+  );
+  await page.setContent(
+    `<!doctype html><html><head><base href="https://fixture.local/"><style>${css}</style></head><body><div id="logo-test"></div></body></html>`,
+  );
+  await page.addScriptTag({ content: interactive.outputFiles[0].text });
+  await page.evaluate(() => window.renderBrand(null));
+  await page.locator(".brand-logo-placeholder").waitFor();
+  assert.equal(await page.locator(".brand-logo img").count(), 0);
+  await page.evaluate(() => window.renderBrand("/brands/missing-test.svg"));
+  await page.waitForFunction(
+    () =>
+      document.querySelector(".brand-logo")?.dataset.logoState ===
+        "placeholder" && !document.querySelector(".brand-logo img"),
+  );
+  assert.equal(
+    await page.locator(".brand-logo-placeholder").textContent(),
+    "MP",
+  );
+  await page.evaluate(() => window.renderBrand("/brands/test-logo.svg"));
+  await page.waitForFunction(
+    () => document.querySelector(".brand-logo")?.dataset.logoState === "loaded",
+  );
+  assert.equal(
+    await page.locator(".brand-logo img").getAttribute("alt"),
+    "Logo de Marca de prueba",
+  );
+  assert.equal(
+    await page
+      .locator(".brand-logo img")
+      .evaluate((el) => getComputedStyle(el).objectFit),
+    "contain",
+  );
+  assert.equal(
+    await page.locator(".brand-logo-placeholder").getAttribute("aria-hidden"),
+    "true",
+  );
+  await page.evaluate(() => window.renderBrand(null));
+  await page.waitForFunction(
+    () =>
+      document.querySelector(".brand-logo")?.dataset.logoState ===
+      "placeholder",
+  );
+  console.log(
+    "Logo checks passed: absent source, failed image, successful load, aspect ratio and source replacement.",
+  );
   // WCAG AA normal-text threshold for the actual palette, including tinted surfaces.
   const luminance = (hex) => {
     const rgb = hex

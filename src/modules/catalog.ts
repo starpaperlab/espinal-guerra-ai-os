@@ -1,31 +1,39 @@
 export const brands = [
   {
     id: "ceo-rentable-os",
+    slug: "ceo-rentable-os",
+    logo: "/brands/ceo-rentable-os.png",
+    href: "/dashboard?marca=ceo-rentable-os",
     name: "CEO Rentable OS",
     initials: "CR",
     description: "Gestión y rentabilidad empresarial",
-    color: "violet",
   },
   {
     id: "plannerlab",
+    slug: "plannerlab",
+    logo: "/brands/plannerlab.png",
+    href: "/dashboard?marca=plannerlab",
     name: "PlannerLab",
     initials: "PL",
     description: "Planificación y productividad",
-    color: "blue",
   },
   {
     id: "star-paper-lab",
+    slug: "star-paper-lab",
+    logo: "/brands/star-paper-lab.png",
+    href: "/dashboard?marca=star-paper-lab",
     name: "Star Paper Lab",
     initials: "SP",
     description: "Creatividad y productos de papelería",
-    color: "rose",
   },
   {
     id: "emprendedora-digital-ia",
+    slug: "emprendedora-digital-ia",
+    logo: "/brands/emprendedora-digital-con-ia.png",
+    href: "/dashboard?marca=emprendedora-digital-ia",
     name: "Emprendedora Digital con IA",
     initials: "ED",
     description: "Emprendimiento y educación digital",
-    color: "amber",
   },
 ] as const;
 export const modules = [

@@ -108,3 +108,11 @@ Montserrat se usa en títulos, subtítulos y métricas; Poppins en cuerpo, menú
 `src/components/corporate-identity.tsx` centraliza el identificador. No se recibió el archivo gráfico original ni una imagen de referencia con la solicitud: se utiliza texto identificado como provisional, sin recrear el isotipo de alas. Cuando esté disponible el original autorizado, guárdalo en `public/brand/` y proporciona su ruta mediante `logoSrc` a `CorporateIdentity` en el sidebar y la pantalla de acceso. Mantén el original sin alteraciones y un contraste adecuado sobre fondo azul y blanco.
 
 El panel añade bienvenida con el correo de la sesión ya disponible, accesos rápidos a módulos existentes, resumen comercial y estado operativo. Los nuevos bloques son estados vacíos, sin métricas ficticias, consultas o automatizaciones. Las pruebas de presentación verifican los diez espacios a seis anchos, la carga de ambas fuentes y nueve pares de contraste AA. Se conserva la barrera de autorización existente.
+
+## Logos de marcas y portafolio
+
+El catálogo `src/modules/catalog.ts` define `slug`, `name`, `description`, `logo` y `href` por marca. Se mantiene `id` para conservar los enlaces y el selector existentes. `BrandLogo` usa `next/image` con `object-fit: contain` en un contenedor estable; muestra las iniciales mientras carga, si `logo` está vacío o si la imagen falla. El estado se reinicia al cambiar la fuente. Los logos no se recortan ni se deforman.
+
+Añade los archivos oficiales en `public/brands/` según su [guía](public/brands/README.md). Las rutas PNG están preparadas; para usar SVG original autorizado, cambia la extensión del campo `logo`. No se han suministrado logos oficiales de las cuatro marcas: las iniciales siguen siendo un recurso provisional, no logos reales.
+
+El dashboard y Marcas muestran las tarjetas con acceso al espacio de trabajo y una sección **Portafolio empresarial** con las cuatro marcas, incluso al filtrar el contexto de las tarjetas. Las pruebas `npm run test:ui` comprueban el componente con imágenes ausentes, fallidas y válidas, preservación de proporciones y reemplazo de fuente, además de la revisión responsive de los ocho módulos y pantallas de acceso. La imagen sintética de estas pruebas existe solo dentro del navegador de pruebas y no se publica como logo de ninguna marca.
