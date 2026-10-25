@@ -36,9 +36,13 @@ try {
       import Pending from './src/app/configuracion-pendiente/page';
       import {CrmView,CrmBrandFilter} from './src/modules/crm/view';
       import {crmFixture,crmDetailFixture} from './tests/crm/fixtures';
+      import {EnterpriseView} from './src/modules/automation/view';
+      import {enterpriseFixture} from './tests/crm/enterprise-fixtures';
       export const screens = Object.fromEntries(modules.map(module => [module.slug, renderToStaticMarkup(<Workspace module={module}/>)]));
       screens.login = renderToStaticMarkup(await Login({searchParams: Promise.resolve({error: 'credentials'})}));
       screens.pending = renderToStaticMarkup(<Pending/>);
+      for(const [name,data] of Object.entries({'native-config':enterpriseFixture,'native-pending':{...enterpriseFixture,bound:false,error:'Migración 006 pendiente'}}))screens[name]=renderToStaticMarkup(<Workspace module={modules.find(m=>m.slug==='configuracion')}><EnterpriseView data={data}/></Workspace>);
+
       for(const [name,data] of Object.entries({'crm-vacio':crmFixture,'crm-bandeja':{...crmDetailFixture,detail:null},'crm-ficha':crmDetailFixture,'crm-pipeline':{...crmDetailFixture,query:{vista:'pipeline'}},'crm-seguimiento':{...crmDetailFixture,query:{vista:'seguimiento'}},'crm-pendiente':{...crmFixture,summary:null,error:'Migración pendiente de aplicar'}})) {
         screens[name]=renderToStaticMarkup(<Workspace module={modules.find(m=>m.slug==='ventas')} headerControl={<CrmBrandFilter data={data}/>}><CrmView data={data}/></Workspace>);
       }
@@ -76,7 +80,7 @@ try {
                   ? `export const useRouter = () => ({ push() {} }); export const usePathname = () => '/dashboard'; export function redirect() { throw new Error('Unexpected redirect in isolated presentation fixture'); }`
                   : path.includes("config")
                     ? `export const getSupabaseConfig = () => true;`
-                    : `export async function signIn() {} export async function signOut() {} export async function createLead() {} export async function updateLead() {} export async function createOpportunity() {} export async function moveOpportunity() {} export async function createActivity() {} export async function completeActivity() {} export async function createProposal() {}`,
+                    : `export async function signIn() {} export async function signOut() {} export async function createLead() {} export async function updateLead() {} export async function createOpportunity() {} export async function moveOpportunity() {} export async function createActivity() {} export async function completeActivity() {} export async function createProposal() {} export async function reconcileEnterprise() {} export async function saveCaptureSource() {} export async function setCaptureSourceState() {} export async function saveDraftAutomation() {}`,
           }));
         },
       },
@@ -129,7 +133,7 @@ try {
         await page.locator(".mobile-nav").evaluate((el) => {
           el.open = true;
         });
-      if (name.startsWith("crm-"))
+      if (name.startsWith("crm-") || name.startsWith("native-"))
         await page.locator(".crm details").evaluateAll((nodes) =>
           nodes.forEach((node) => {
             node.open = true;
@@ -177,8 +181,8 @@ try {
         );
         assert.equal(
           await page.locator(".brand-card").count(),
-          4,
-          "All four brands remain visible",
+          5,
+          "All five catalog identities remain visible in the isolated fixture",
         );
         assert.equal(await page.locator("#portfolio-heading").count(), 1);
         assert.equal(
@@ -205,7 +209,13 @@ try {
         );
       }
       if (
-        ["dashboard", "login", "crm-ficha", "crm-pipeline"].includes(name) &&
+        [
+          "dashboard",
+          "login",
+          "crm-ficha",
+          "crm-pipeline",
+          "native-config",
+        ].includes(name) &&
         [390, 768, 1440].includes(width)
       )
         await page.screenshot({

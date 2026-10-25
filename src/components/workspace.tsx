@@ -1,3 +1,4 @@
+import type { WorkspaceBrand } from "@/modules/workspace-brands";
 import type { ReactNode } from "react";
 import { BrandPortfolio } from "./brand-portfolio";
 import { CorporateIdentity } from "./corporate-identity";
@@ -19,7 +20,11 @@ import {
   CircleHelp,
   Sparkles,
 } from "lucide-react";
-import { modules, brands, type Module, selectedBrand } from "@/modules/catalog";
+import {
+  modules,
+  brands as catalogBrands,
+  type Module,
+} from "@/modules/catalog";
 import { BrandSelector } from "./brand-selector";
 import { signOut } from "@/app/login/actions";
 const icons = {
@@ -38,15 +43,21 @@ export function Workspace({
   email,
   children,
   headerControl,
+  availableBrands = catalogBrands,
+  brandsError,
 }: {
   module: Module;
   brandId?: string;
   email?: string;
   children?: ReactNode;
   headerControl?: ReactNode;
+  availableBrands?: readonly WorkspaceBrand[];
+  brandsError?: string;
 }) {
-  const brand = selectedBrand(brandId);
-  const suffix = brand ? `?marca=${brand.id}` : "";
+  const brand = availableBrands.find(
+    (b) => b.id === brandId || b.slug === brandId,
+  );
+  const suffix = brand ? `?marca=${encodeURIComponent(brand.slug)}` : "";
   const navigation = (
     <>
       <CorporateIdentity variant="dark" />
@@ -124,8 +135,15 @@ export function Workspace({
               <h1>{module.name}</h1>
               <p className="muted">{module.description}</p>
             </div>
-            {headerControl ?? <BrandSelector value={brand?.id} />}
+            {headerControl ?? (
+              <BrandSelector value={brand?.slug} brands={availableBrands} />
+            )}
           </div>
+          {brandsError && (
+            <p role="alert" className="crm-notice">
+              {brandsError}
+            </p>
+          )}
           {module.slug === "dashboard" ? (
             <>
               <p className="personal-welcome">
@@ -176,7 +194,9 @@ export function Workspace({
                 {[
                   {
                     label: "Marcas en catálogo",
-                    value: String(brand ? 1 : brands.length),
+                    value: brandsError
+                      ? "—"
+                      : String(brand ? 1 : availableBrands.length),
                     note: "Catálogo inicial",
                     icon: Layers3,
                   },
@@ -268,7 +288,11 @@ export function Workspace({
                   </Link>
                 </article>
               </section>
-              <BrandPortfolio brandId={brand?.id} title="Nuestras marcas" />
+              <BrandPortfolio
+                brands={availableBrands}
+                brandId={brand?.id}
+                title="Nuestras marcas"
+              />
               <section className="lower-grid">
                 <div className="card empty-card">
                   <div className="section-heading">
@@ -305,7 +329,7 @@ export function Workspace({
               </section>
             </>
           ) : module.slug === "marcas" ? (
-            <BrandPortfolio brandId={brand?.id} />
+            <BrandPortfolio brands={availableBrands} brandId={brand?.id} />
           ) : children ? (
             children
           ) : (

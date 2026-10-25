@@ -1,5 +1,15 @@
 export const brands = [
   {
+    id: "espinal-guerra",
+    slug: "espinal-guerra",
+    logo: "/brand/espinal-guerra-logo.png",
+    href: "/dashboard?marca=espinal-guerra",
+    name: "Espinal Guerra",
+    status: "En catálogo",
+    initials: "EG",
+    description: "Marca corporativa del grupo empresarial",
+  },
+  {
     id: "ceo-rentable-os",
     slug: "ceo-rentable-os",
     logo: "/brands/ceo-rentable-os.png",

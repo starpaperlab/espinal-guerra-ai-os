@@ -93,7 +93,11 @@ export const webhookSchema = z
     event_id: z.string().min(1).max(160),
     external_id: z.string().min(1).max(160),
     type: z.literal("lead.created"),
-    brand_id: z.uuid(),
+    brand_id: z.uuid().optional(),
+    capture_source_key: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9_-]{2,99}$/)
+      .optional(),
     contact: z
       .object({
         name: z.string().trim().min(1).max(160),
@@ -152,5 +156,9 @@ export const webhookSchema = z
         v.classification !== null &&
         v.evaluated_at !== null),
     "La evaluación debe recibirse completa o quedar vacía",
+  )
+  .refine(
+    (v) => Boolean(v.brand_id || v.capture_source_key),
+    "Se requiere una fuente autorizada o el contrato UUID legado",
   );
 export type LeadInput = z.infer<typeof leadSchema>;

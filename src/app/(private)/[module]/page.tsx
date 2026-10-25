@@ -1,6 +1,7 @@
+import { loadWorkspaceBrands } from "@/lib/workspace-brands";
 import { notFound } from "next/navigation";
 import { requireWorkspace } from "@/lib/auth";
-import { modules, selectedBrand } from "@/modules/catalog";
+import { modules } from "@/modules/catalog";
 import { Workspace } from "@/components/workspace";
 export default async function ModulePage({
   params,
@@ -13,10 +14,13 @@ export default async function ModulePage({
   const [{ module: slug }, query] = await Promise.all([params, searchParams]);
   const moduleConfig = modules.find((m) => m.slug === slug);
   if (!moduleConfig) notFound();
+  const registered = await loadWorkspaceBrands();
   return (
     <Workspace
       module={moduleConfig}
-      brandId={selectedBrand(query.marca)?.id}
+      brandId={typeof query.marca === "string" ? query.marca : undefined}
+      availableBrands={registered.brands}
+      brandsError={registered.error}
       email={workspace.user.email}
     />
   );

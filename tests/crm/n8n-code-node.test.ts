@@ -28,7 +28,7 @@ test("Artefacto copiable a n8n ejecuta el contrato real sin depender de imports 
     CRM_WEBHOOK_SECRET: secret,
     CRM_BRAND_ID: randomUUID(),
   };
-  const run = (config = env, executionMode = "test") =>
+  const run = (config: Record<string, string> = env, executionMode = "test") =>
     execute(
       config,
       {
@@ -69,6 +69,17 @@ test("Artefacto copiable a n8n ejecuta el contrato real sin depender de imports 
   );
   assert.ok(!result.body.includes(secret));
   assert.throws(() => run({ ...env, CRM_CAPTURE_IS_TEST: "" }));
+  const sourceMode = webhookSchema.parse(
+    JSON.parse(
+      run({
+        ...env,
+        CRM_BRAND_ID: "",
+        CRM_CAPTURE_SOURCE_KEY: "ceo-campaign",
+      })[0].json.body,
+    ),
+  );
+  assert.equal(sourceMode.brand_id, undefined);
+  assert.equal(sourceMode.capture_source_key, "ceo-campaign");
   const manual = webhookSchema.parse(
     JSON.parse(
       run({ ...env, CRM_CAPTURE_IS_TEST: "false" }, "test")[0].json.body,

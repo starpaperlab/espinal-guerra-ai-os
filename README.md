@@ -160,3 +160,13 @@ La migración `202610250004_n8n_ai_assessment.sql`, después de la 003, conserva
 El OUTPUT normalizado confirmado ya tiene adaptador directo en `integrations/n8n/normalized-lead.cjs`, sin volver a parsear el modelo. Admite opcionales `null` y conserva volumen mensual, contacto y evaluación. `npm run build:n8n` genera un único archivo autocontenido para copiar a un nodo nuevo en una rama paralela, manteniendo intactos Switch, Sheets y Gmail.
 
 La actualización SQL actual es `202610250005_n8n_normalized_capture.sql` (contrato 4). Puede aplicarse directamente sobre 002, o después de 003/004 si ya están aplicadas, sin borrar registros. Las guías anteriores describen etapas previas; para la configuración vigente y sus límites de idempotencia, usar [la guía del contrato normalizado](docs/n8n-normalized-contract.md). La recepción real n8n → Supabase continúa pendiente de verificación.
+
+## Fase 2.3 · Multimarca y automatizaciones nativas
+
+La organización del grupo se vincula una vez en Supabase. Las fuentes autorizadas resuelven su marca en el servidor: no se necesitan cinco organizaciones ni un Brand ID fijo de Vercel. Se conserva n8n como integración opcional y la compatibilidad de su receptor anterior.
+
+[Guía vigente, variables exactas y habilitación segura](docs/native-foundation-2.3.md). Primero ejecutar [auditoría de solo lectura](docs/sql/automation-audit.sql); después aplicar una sola vez la migración `202610250006_multibrand_native_foundation.sql` y ejecutar [bootstrap de operador](docs/sql/enterprise-bootstrap.sql) con el resultado verificado. Por defecto no crea organizaciones ni eleva permisos. El reporte confirma si la organización se reutilizó y si fue necesario agregar la marca corporativa.
+
+Configuración permite consultar marcas reales y gestionar fuentes/borradores con sesión autorizada. Se preparó outbox nativo transaccional, leases, intentos e infraestructura de conversiones. No hay IA/Resend/worker activo ni secuencias enviándose. El diagnóstico CEO existente solo tiene una fuente deshabilitada y un recorrido en borrador; no fue duplicado.
+
+Para CRM, autenticación y la gestión privada nativa siguen siendo obligatorias solo las dos variables públicas Supabase ya utilizadas. Las claves de recepción externa son opcionales mientras esa conexión esté desactivada. No borrar variables usadas por una integración legacy: la tabla de la guía diferencia ambos modos.

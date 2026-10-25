@@ -6,15 +6,15 @@ function normalizeN8nLead(lead, context) {
     throw new Error("CRM_FLAT_LEAD_REQUIRED");
   if (!context || typeof context !== "object")
     throw new Error("CRM_CONTEXT_REQUIRED");
-  for (const key of [
-    "workflow_id",
-    "execution_id",
-    "brand_id",
-    "observed_at",
-  ]) {
+  for (const key of ["workflow_id", "execution_id", "observed_at"]) {
     if (typeof context[key] !== "string" || !context[key].trim())
       throw new Error(`CRM_CONTEXT_REQUIRED:${key}`);
   }
+  if (
+    !context.capture_source_key &&
+    (typeof context.brand_id !== "string" || !context.brand_id.trim())
+  )
+    throw new Error("CRM_DESTINATION_REQUIRED");
   if (!Number.isSafeInteger(context.item_index) || context.item_index < 0)
     throw new Error("CRM_ITEM_INDEX_REQUIRED");
   if (typeof context.is_test !== "boolean")
@@ -74,6 +74,7 @@ function normalizeN8nLead(lead, context) {
       ? "source-event:" + sourceKey
       : "n8n-execution:" + executionKey,
     brand_id: context.brand_id,
+    capture_source_key: context.capture_source_key,
     contact: {
       name: lead.name,
       email: optionalText("email"),

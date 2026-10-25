@@ -1,7 +1,13 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
-import { brands } from "@/modules/catalog";
-export function BrandSelector({ value }: { value?: string }) {
+import { brands as catalogBrands } from "@/modules/catalog";
+export function BrandSelector({
+  value,
+  brands = catalogBrands,
+}: {
+  value?: string;
+  brands?: readonly { slug: string; name: string }[];
+}) {
   const router = useRouter();
   const path = usePathname();
   return (
@@ -21,7 +27,7 @@ export function BrandSelector({ value }: { value?: string }) {
       >
         <option value="">Todas las marcas</option>
         {brands.map((b) => (
-          <option value={b.id} key={b.id}>
+          <option value={b.slug} key={b.slug}>
             {b.name}
           </option>
         ))}

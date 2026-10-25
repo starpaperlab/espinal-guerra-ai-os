@@ -167,3 +167,18 @@ test("La procedencia de prueba prevalece sobre un contexto configurado para dato
     true,
   );
 });
+
+test("El destino configurado por fuente no requiere un Brand ID fijo", () => {
+  const context: Record<string, unknown> = {
+    ...ctx(),
+    capture_source_key: "ceo-diagnostico",
+  };
+  delete context.brand_id;
+  const body = prepareCrmRequest(
+    normalizeN8nLead(flat(), context),
+    randomBytes(48).toString("hex"),
+  ).body;
+  const parsed = webhookSchema.parse(JSON.parse(body));
+  assert.equal(parsed.brand_id, undefined);
+  assert.equal(parsed.capture_source_key, "ceo-diagnostico");
+});

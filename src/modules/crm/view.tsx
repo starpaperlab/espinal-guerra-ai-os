@@ -863,6 +863,7 @@ function LeadDetail({ data, lead }: { data: CrmData; lead: Lead }) {
                     crm_opportunities: "Oportunidad",
                     crm_activities: "Actividad",
                     crm_proposals: "Propuesta",
+                    crm_conversions: "Conversión",
                   } as Record<string, string>
                 )[h.entity_type]
               }

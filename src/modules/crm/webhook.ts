@@ -25,7 +25,8 @@ export function verifySignature(
 }
 type Dependencies = {
   secret: string;
-  organizationId: string;
+  organizationId?: string;
+  requiredSourceKey?: string;
   ingest: (
     event: unknown,
     hash: string,
@@ -124,6 +125,15 @@ export async function receiveLead(
       },
       400,
       "INVALID_PAYLOAD",
+    );
+  if (
+    deps.requiredSourceKey &&
+    parsed.data.capture_source_key !== deps.requiredSourceKey
+  )
+    return json(
+      { error: "La fuente firmada no coincide con el destino autorizado" },
+      422,
+      "SOURCE_MISMATCH",
     );
   try {
     if (deps.ensureReady && !(await deps.ensureReady()))

@@ -18,7 +18,7 @@ const observedAt = $now.toISO();
 return $input.all().map((item, index) => ({
   json: prepareCrmRequest(normalizeN8nLead(item.json, {
     workflow_id: $workflow.id, execution_id: $execution.id, item_index: index,
-    brand_id: $env.CRM_BRAND_ID, observed_at: observedAt, is_test: mode === 'true', execution_mode: $execution.mode || 'unknown'
+    brand_id: $env.CRM_BRAND_ID || undefined, capture_source_key: item.json.capture_source_key || $env.CRM_CAPTURE_SOURCE_KEY || undefined, observed_at: observedAt, is_test: mode === 'true', execution_mode: $execution.mode || 'unknown'
   }), $env.CRM_WEBHOOK_SECRET)
 }));
 `;

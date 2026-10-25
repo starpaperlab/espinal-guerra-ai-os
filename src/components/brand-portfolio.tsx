@@ -1,3 +1,4 @@
+import type { WorkspaceBrand } from "@/modules/workspace-brands";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { brands } from "@/modules/catalog";
@@ -7,9 +8,11 @@ import { BrandLogo } from "./brand-logo";
 export function BrandPortfolio({
   brandId,
   title = "Portafolio empresarial",
+  brands: suppliedBrands,
 }: {
   brandId?: string;
   title?: string;
+  brands?: readonly WorkspaceBrand[];
 }) {
   return (
     <section aria-labelledby="portfolio-heading">
@@ -18,7 +21,7 @@ export function BrandPortfolio({
         <span>El ecosistema Espinal Guerra</span>
       </div>
       <div className="brands-grid">
-        {brands
+        {(suppliedBrands ?? brands)
           .filter((b) => !brandId || b.id === brandId)
           .map((b) => (
             <Link className="card brand-card" key={b.slug} href={b.href}>

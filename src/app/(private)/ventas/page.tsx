@@ -1,3 +1,4 @@
+import { workspaceBrands } from "@/modules/workspace-brands";
 import { Workspace } from "@/components/workspace";
 import { modules } from "@/modules/catalog";
 import { crmContext, loadCrm } from "@/modules/crm/data";
@@ -21,6 +22,7 @@ export default async function SalesPage({
       module={modules.find((m) => m.slug === "ventas")!}
       brandId={data.selectedBrand?.slug}
       email={user.email}
+      availableBrands={workspaceBrands(data.brands)}
       headerControl={<CrmBrandFilter data={data} />}
     >
       <CrmView data={data} />

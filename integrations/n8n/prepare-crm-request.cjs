@@ -11,16 +11,21 @@ function prepareCrmRequest(input, secret, now = Date.now()) {
     throw new Error("CRM_EVENT_REQUIRED");
   if (input.organization_id !== undefined)
     throw new Error("ORGANIZATION_IS_SERVER_CONFIGURED");
-  for (const key of [
-    "event_id",
-    "external_id",
-    "brand_id",
-    "source",
-    "occurred_at",
-  ]) {
+  for (const key of ["event_id", "external_id", "source", "occurred_at"]) {
     if (typeof input[key] !== "string" || !input[key].trim())
       throw new Error(`CRM_FIELD_REQUIRED:${key}`);
   }
+  if (
+    !input.capture_source_key &&
+    (typeof input.brand_id !== "string" || !input.brand_id.trim())
+  )
+    throw new Error("CRM_DESTINATION_REQUIRED");
+  if (
+    input.capture_source_key != null &&
+    (typeof input.capture_source_key !== "string" ||
+      !/^[a-z0-9][a-z0-9_-]{2,99}$/.test(input.capture_source_key))
+  )
+    throw new Error("CRM_SOURCE_KEY_INVALID");
   if (input.event_id.length > 160 || input.external_id.length > 160)
     throw new Error("CRM_ID_TOO_LONG");
   if (typeof input.is_test !== "boolean")
@@ -87,6 +92,7 @@ function prepareCrmRequest(input, secret, now = Date.now()) {
     event_id: input.event_id,
     external_id: input.external_id,
     brand_id: input.brand_id,
+    capture_source_key: input.capture_source_key,
     contact: {
       name: input.contact.name,
       company: input.contact.company ?? "",
@@ -140,6 +146,7 @@ function prepareMappedCrmRequest(source, mapping, secret, now = Date.now()) {
     "event_id",
     "external_id",
     "brand_id",
+    "capture_source_key",
     "source",
     "campaign",
     "monthly_leads",
