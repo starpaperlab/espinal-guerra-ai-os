@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.mjs tests/crm/*.test.ts",
-    "test:ui": "node tests/ui/legibility.mjs"
+    "test:ui": "node tests/ui/legibility.mjs",
+    "build:n8n": "node scripts/build-n8n-code.mjs"
   },
   "repository": {
     "type": "git",

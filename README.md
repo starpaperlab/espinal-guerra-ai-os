@@ -154,3 +154,9 @@ Aplicar una vez `supabase/migrations/202610250003_n8n_capture_fields.sql` para p
 Se preparó un lector estricto de `output → content[type=output_text] → text(JSON)` y un mapa parcial de los nueve campos confirmados por la administradora. No se considera ese sobre como payload final del workflow: falta verificar el OUTPUT de Code in JavaScript y el contacto del Webhook de la misma ejecución.
 
 La migración `202610250004_n8n_ai_assessment.sql`, después de la 003, conserva prioridad, señal de routing, texto sugerido y desglose en `ai_metadata` como recomendaciones no confirmadas. El contrato avanza a 3 y se verifica antes de escribir. No se crean tareas, citas, precios, propuestas ni envíos desde ese contenido. No se modificó el workflow. [Detalles y siguiente dato necesario](docs/n8n-model-output.md).
+
+## Contrato plano definitivo del nodo JavaScript
+
+El OUTPUT normalizado confirmado ya tiene adaptador directo en `integrations/n8n/normalized-lead.cjs`, sin volver a parsear el modelo. Admite opcionales `null` y conserva volumen mensual, contacto y evaluación. `npm run build:n8n` genera un único archivo autocontenido para copiar a un nodo nuevo en una rama paralela, manteniendo intactos Switch, Sheets y Gmail.
+
+La actualización SQL actual es `202610250005_n8n_normalized_capture.sql` (contrato 4). Puede aplicarse directamente sobre 002, o después de 003/004 si ya están aplicadas, sin borrar registros. Las guías anteriores describen etapas previas; para la configuración vigente y sus límites de idempotencia, usar [la guía del contrato normalizado](docs/n8n-normalized-contract.md). La recepción real n8n → Supabase continúa pendiente de verificación.

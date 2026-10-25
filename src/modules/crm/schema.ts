@@ -107,6 +107,22 @@ export const webhookSchema = z
     message: text(10000),
     budget: text(300),
     urgency: text(300),
+    monthly_leads: z
+      .union([
+        z.string().trim().max(300),
+        z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+      ])
+      .nullable()
+      .default(null),
+    capture_context: z
+      .object({
+        identity_scope: z.enum(["source_event", "n8n_execution"]),
+        capture_time_source: z.enum(["source", "n8n_observed"]),
+        evaluation_time_source: z.enum(["source", "n8n_observed"]).nullable(),
+      })
+      .strict()
+      .nullable()
+      .default(null),
     service: text(300),
     need: text(10000),
     score: z.number().int().min(0).max(100).nullable(),

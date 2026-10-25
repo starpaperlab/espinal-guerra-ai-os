@@ -133,3 +133,7 @@ Las pruebas locales usan el adaptador real → receptor real → función SQL en
 ## Actualización: estructura de Message a model confirmada
 
 La estructura del modelo fue suministrada después de esta auditoría inicial. Ya existe un lector y un mapa parcial para sus nueve campos, pero el OUTPUT de Code in JavaScript sigue sin verificarse. Consultar [respuesta del modelo y recomendaciones no confirmadas](n8n-model-output.md). El contrato actual es 3 y requiere la migración 004; las sugerencias no activan comunicaciones, tareas o compromisos.
+
+## Contrato normalizado definitivo recibido
+
+El OUTPUT de Code in JavaScript ya fue confirmado como objeto plano por la administradora. La guía vigente es [contrato normalizado](n8n-normalized-contract.md), con adaptador directo, nullable, contexto de ejecución e instrucciones de rama paralela. El contrato actual avanza a 4 mediante la actualización 005; no volver a aplicar versiones anteriores después de ella.

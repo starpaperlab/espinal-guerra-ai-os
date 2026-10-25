@@ -473,6 +473,38 @@ test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t)
         );
       },
     );
+    await t.test(
+      "Actualización normalizada conserva filas anteriores y habilita contrato 4",
+      async () => {
+        const before = (
+          await db.query(
+            "select id,is_test,stage,next_action,ai_metadata from crm_leads order by id",
+          )
+        ).rows;
+        await db.exec(
+          await readFile(
+            "supabase/migrations/202610250005_n8n_normalized_capture.sql",
+            "utf8",
+          ),
+        );
+        assert.deepEqual(
+          (
+            await db.query(
+              "select id,is_test,stage,next_action,ai_metadata from crm_leads order by id",
+            )
+          ).rows,
+          before,
+        );
+        assert.equal(
+          (
+            await db.query<{ v: number }>(
+              "select crm_inbound_contract_version() v",
+            )
+          ).rows[0].v,
+          4,
+        );
+      },
+    );
     const secret = randomBytes(48).toString("hex");
     const event = {
       event_id: randomUUID(),
@@ -749,6 +781,114 @@ test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t)
             )
           ).rows[0].n,
           before,
+        );
+      },
+    );
+    await t.test(
+      "OUTPUT plano → adaptador → receptor → SQL conserva contacto, null y volumen sin duplicados",
+      async () => {
+        const { normalizeN8nLead } = load(
+          "../../integrations/n8n/normalized-lead.cjs",
+        ) as {
+          normalizeN8nLead: (
+            lead: Record<string, unknown>,
+            context: Record<string, unknown>,
+          ) => Record<string, unknown>;
+        };
+        const flat = {
+          name: "PRUEBA AISLADA · Captura normalizada",
+          email: "flat@example.invalid",
+          phone: null,
+          company: null,
+          source: "espinalguerra.com",
+          service_interest: null,
+          message: "Mensaje de captura real del fixture",
+          monthly_leads: 12,
+          budget: null,
+          urgency: null,
+          lead_score: 60,
+          classification: "WARM",
+          priority: "MEDIUM",
+          route_to_sales: true,
+          main_problem: "Problema",
+          commercial_opportunity: "Oportunidad",
+          recommended_action: "Recomendación",
+          response_suggestion: "Texto no autorizado para envío",
+          scoring_breakdown: { pain_clarity: 16 },
+        };
+        const context = {
+          workflow_id: "isolated",
+          execution_id: randomUUID(),
+          item_index: 0,
+          brand_id: brand,
+          observed_at: new Date().toISOString(),
+          is_test: true,
+          source_event_id: randomUUID(),
+        };
+        const event = normalizeN8nLead(flat, context);
+        const prepared = prepareCrmRequest(event, secret);
+        const response = await receiveLead(
+          new Request("https://example.invalid/api/integrations/n8n/leads", {
+            method: "POST",
+            headers: prepared.headers,
+            body: prepared.body,
+          }),
+          deps,
+        );
+        assert.equal(response.status, 200);
+        const result = await response.json();
+        const row = (
+          await db.query<{
+            name: string;
+            email: string;
+            service: string;
+            budget: string;
+            capture_metadata: Record<string, unknown>;
+            is_test: boolean;
+            next_action: string;
+            score: number;
+          }>(
+            "select l.*,c.name,c.email from crm_leads l join crm_contacts c on c.id=l.contact_id where l.id=$1",
+            [result.lead_id],
+          )
+        ).rows[0];
+        assert.equal(row.name, flat.name);
+        assert.equal(row.email, flat.email);
+        assert.equal(row.service, "");
+        assert.equal(row.budget, "");
+        assert.equal(row.capture_metadata.monthly_leads, 12);
+        assert.equal(row.is_test, true);
+        assert.equal(row.next_action, "");
+        assert.equal(row.score, 60);
+        const replay = await receiveLead(
+          new Request("https://example.invalid/api/integrations/n8n/leads", {
+            method: "POST",
+            headers: prepared.headers,
+            body: prepared.body,
+          }),
+          deps,
+        );
+        assert.equal((await replay.json()).duplicate, true);
+        const changedExecution = prepareCrmRequest(
+          normalizeN8nLead(flat, { ...context, execution_id: randomUUID() }),
+          secret,
+        );
+        const again = await receiveLead(
+          new Request("https://example.invalid/api/integrations/n8n/leads", {
+            method: "POST",
+            headers: changedExecution.headers,
+            body: changedExecution.body,
+          }),
+          deps,
+        );
+        assert.equal((await again.json()).lead_id, result.lead_id);
+        assert.equal(
+          (
+            await db.query("select * from crm_leads where external_id=$1", [
+              event.external_id,
+            ])
+          ).rows.length,
+          1,
         );
       },
     );
