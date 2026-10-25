@@ -1,12 +1,5 @@
 @import "tailwindcss";
 :root {
-  --blue-deep: #0a1f44;
-  --blue-corporate: #1e3a6d;
-  --blue-medium: #4a6fa5;
-  --blue-light: #e6ecf4;
-  --gray-light: #f7f9fc;
-  --gray-dark: #2b2f33;
-  --surface: #fff;
   --ink: var(--gray-dark);
   --muted: var(--blue-corporate);
   --accent: var(--blue-corporate);
@@ -22,8 +15,6 @@
   --text-metric: 2.125rem;
   --text-art: 3.1875rem;
   --sidebar-width: 312px;
-  --font-heading: "Montserrat", sans-serif;
-  --font-body: "Poppins", sans-serif;
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;
@@ -1186,48 +1177,54 @@ dialog::backdrop {
   gap: var(--space-2);
   align-items: flex-start;
 }
-.portfolio-section {
-  margin-top: var(--space-4);
-}
-.portfolio-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-  gap: var(--space-3);
-}
-.portfolio-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  text-align: center;
-  min-width: 0;
-  transition:
-    border-color 0.15s,
-    transform 0.15s;
-}
-.portfolio-card:hover {
-  border-color: var(--blue-medium);
-  transform: translateY(-2px);
-}
-.portfolio-card h3 {
-  font-size: var(--text-card);
-  flex: 1;
-}
-.portfolio-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-md);
-  color: var(--blue-corporate);
-}
 @media (max-width: 600px) {
   .brand-logo {
     width: 140px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .portfolio-card {
-    transition: none;
-  }
+
+/* Identity variants share central paths; failure leaves a discreet textual identity. */
+.corporate-identity {
+  position: relative;
+}
+.identity-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.corporate-logo-slot {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+.corporate-logo {
+  object-fit: contain;
+  padding: 0;
+  filter: none;
+}
+.corporate-identity[data-logo-state="loaded"] .corporate-logo-slot {
+  position: relative;
+  inset: auto;
+  display: block;
+  visibility: visible;
+  width: min(100%, var(--identity-logo-width));
+  height: var(--identity-logo-height);
+}
+.corporate-identity[data-logo-state="loaded"] .identity-fallback {
+  display: none;
+}
+.corporate-identity[data-variant="dark"] {
+  color: var(--surface);
+}
+.corporate-identity[data-variant="dark"] strong,
+.corporate-identity[data-variant="dark"] .identity-kicker {
+  color: var(--surface);
+}
+.corporate-identity[data-variant="dark"] .identity-pending,
+.corporate-identity[data-variant="dark"] .identity-slogan {
+  color: var(--blue-light);
+}
+.identity-slogan {
+  font-size: var(--text-sm);
+  color: var(--blue-corporate);
 }

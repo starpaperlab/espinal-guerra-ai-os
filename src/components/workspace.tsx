@@ -1,4 +1,4 @@
-import { BrandLogo } from "./brand-logo";
+import { BrandPortfolio } from "./brand-portfolio";
 import { CorporateIdentity } from "./corporate-identity";
 import Link from "next/link";
 import {
@@ -44,7 +44,7 @@ export function Workspace({
   const suffix = brand ? `?marca=${brand.id}` : "";
   const navigation = (
     <>
-      <CorporateIdentity />
+      <CorporateIdentity variant="dark" />
       <p className="nav-label">ESPACIO DE TRABAJO</p>
       <nav aria-label="Navegación principal">
         {modules.map((m) => {
@@ -263,7 +263,7 @@ export function Workspace({
                   </Link>
                 </article>
               </section>
-              <BrandGrid brandId={brand?.id} />
+              <BrandPortfolio brandId={brand?.id} title="Nuestras marcas" />
               <section className="lower-grid">
                 <div className="card empty-card">
                   <div className="section-heading">
@@ -300,7 +300,7 @@ export function Workspace({
               </section>
             </>
           ) : module.slug === "marcas" ? (
-            <BrandGrid brandId={brand?.id} />
+            <BrandPortfolio brandId={brand?.id} />
           ) : (
             <section className="card module-empty">
               <span className="soft-icon">
@@ -345,55 +345,5 @@ export function Workspace({
         </main>
       </div>
     </div>
-  );
-}
-function BrandGrid({ brandId }: { brandId?: string }) {
-  return (
-    <section>
-      <div className="section-heading">
-        <h2>Nuestras marcas</h2>
-        <span>Portafolio empresarial</span>
-      </div>
-      <div className="brands-grid">
-        {brands
-          .filter((b) => !brandId || b.id === brandId)
-          .map((b) => (
-            <Link className="card brand-card" key={b.id} href={b.href}>
-              <div className="brand-card-top">
-                <BrandLogo name={b.name} initials={b.initials} logo={b.logo} />
-                <ArrowUpRight size={18} />
-              </div>
-              <h3>{b.name}</h3>
-              <p>{b.description}</p>
-              <div className="brand-card-bottom">
-                <span className="tag">En catálogo</span>
-                <span>
-                  Ver espacio <ArrowRight size={14} />
-                </span>
-              </div>
-            </Link>
-          ))}
-      </div>
-      <section
-        className="portfolio-section"
-        aria-labelledby="portfolio-heading"
-      >
-        <div className="section-heading">
-          <h2 id="portfolio-heading">Portafolio empresarial</h2>
-          <span>El ecosistema Espinal Guerra</span>
-        </div>
-        <div className="portfolio-grid">
-          {brands.map((b) => (
-            <Link className="card portfolio-card" href={b.href} key={b.slug}>
-              <BrandLogo name={b.name} initials={b.initials} logo={b.logo} />
-              <h3>{b.name}</h3>
-              <span className="portfolio-link">
-                Ver espacio <ArrowUpRight size={16} />
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-    </section>
   );
 }

@@ -29,6 +29,7 @@ try {
   await build({
     stdin: {
       contents: `import { renderToStaticMarkup } from 'react-dom/server';
+      export { corporateTheme as theme } from './src/config/corporate-identity';
       import { Workspace } from './src/components/workspace';
       import { modules } from './src/modules/catalog';
       import Login from './src/app/login/page';
@@ -75,9 +76,13 @@ try {
       },
     ],
   });
-  const { screens } = await import(
+  const { screens, theme } = await import(
     pathToFileURL(join(temporary, "fixture.mjs"))
   );
+  const themeStyle = Object.entries(theme)
+    .map(([key, value]) => `${key}:${value}`)
+    .join(";")
+    .replaceAll('"', "&quot;");
   const cssDir = ".next/static/chunks";
   const css = (
     await Promise.all(
@@ -103,7 +108,7 @@ try {
     await page.setViewportSize({ width, height: 900 });
     for (const [name, html] of Object.entries(screens)) {
       await page.setContent(
-        `<!doctype html><html lang="es"><head><base href="https://fixture.local/_next/static/chunks/"><style>${css}</style></head><body>${html}</body></html>`,
+        `<!doctype html><html lang="es" style="${themeStyle}"><head><base href="https://fixture.local/_next/static/chunks/"><style>${css}</style></head><body>${html}</body></html>`,
       );
       await page.evaluate(() => document.fonts.ready);
       assert.ok(
@@ -152,6 +157,25 @@ try {
         return problems;
       });
       assert.deepEqual(problems, [], `${name} at ${width}px`);
+      if (["dashboard", "marcas"].includes(name)) {
+        assert.equal(
+          await page.locator(".brands-grid").count(),
+          1,
+          "A single portfolio grid per page",
+        );
+        assert.equal(
+          await page.locator(".brand-card").count(),
+          4,
+          "All four brands remain visible",
+        );
+        assert.equal(await page.locator("#portfolio-heading").count(), 1);
+        assert.equal(
+          await page
+            .locator(".sidebar .corporate-identity")
+            .getAttribute("data-variant"),
+          "dark",
+        );
+      }
       if (name === "dashboard") {
         assert.equal(
           await page
@@ -202,9 +226,10 @@ try {
   // Hydrate the real next/image component to exercise load/error and source replacement.
   const interactive = await build({
     stdin: {
-      contents: `import {createRoot} from 'react-dom/client'; import {BrandLogo} from './src/components/brand-logo';
+      contents: `import {createRoot} from 'react-dom/client'; import {BrandLogo} from './src/components/brand-logo'; import {CorporateIdentity} from './src/components/corporate-identity';
       const root = createRoot(document.getElementById('logo-test'));
-      window.renderBrand = logo => root.render(<BrandLogo name="Marca de prueba" initials="MP" logo={logo}/>);`,
+      window.renderBrand = logo => root.render(<BrandLogo name="Marca de prueba" initials="MP" logo={logo}/>);
+      window.renderIdentity = variant => root.render(<CorporateIdentity variant={variant}/>);`,
       resolveDir: process.cwd(),
       loader: "tsx",
     },
@@ -223,7 +248,7 @@ try {
     }),
   );
   await page.setContent(
-    `<!doctype html><html><head><base href="https://fixture.local/"><style>${css}</style></head><body><div id="logo-test"></div></body></html>`,
+    `<!doctype html><html style="${themeStyle}"><head><base href="https://fixture.local/"><style>${css}</style></head><body><div id="logo-test"></div></body></html>`,
   );
   await page.addScriptTag({ content: interactive.outputFiles[0].text });
   await page.evaluate(() => window.renderBrand(null));
@@ -265,6 +290,58 @@ try {
   );
   console.log(
     "Logo checks passed: absent source, failed image, successful load, aspect ratio and source replacement.",
+  );
+  await page.evaluate(() => window.renderIdentity("dark"));
+  await page.waitForFunction(
+    () =>
+      document.querySelector('.corporate-identity[data-variant="dark"]') &&
+      !document.querySelector(".corporate-identity img"),
+  );
+  assert.match(
+    await page.locator(".identity-fallback").textContent(),
+    /ESPINAL GUERRA/,
+  );
+  await page.route("https://fixture.local/_next/image?**", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="100"><rect width="240" height="100" fill="#FFFFFF"/></svg>',
+    }),
+  );
+  for (const [variant, expected] of [
+    ["light", "/brand/espinal-guerra-logo.png"],
+    ["dark", "/brand/espinal-guerra-logo-white.png"],
+  ]) {
+    await page.evaluate((variant) => window.renderIdentity(variant), variant);
+    await page.waitForFunction(
+      () =>
+        document.querySelector(".corporate-identity")?.dataset.logoState ===
+        "loaded",
+    );
+    assert.ok(
+      (await page.locator(".corporate-logo").getAttribute("src")).includes(
+        encodeURIComponent(expected),
+      ),
+      `Correct original asset for ${variant}`,
+    );
+    assert.equal(
+      await page
+        .locator(".corporate-logo")
+        .evaluate((el) => getComputedStyle(el).objectFit),
+      "contain",
+    );
+    assert.equal(
+      await page
+        .locator(".corporate-logo")
+        .evaluate((el) => getComputedStyle(el).filter),
+      "none",
+    );
+    assert.equal(
+      await page.locator(".identity-fallback").getAttribute("aria-hidden"),
+      "true",
+    );
+  }
+  console.log(
+    "Corporate identity checks passed: missing artwork, light/dark asset selection, original proportions and no recoloring.",
   );
   // WCAG AA normal-text threshold for the actual palette, including tinted surfaces.
   const luminance = (hex) => {

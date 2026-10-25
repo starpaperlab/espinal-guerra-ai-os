@@ -1,6 +1,6 @@
 # Espinal Guerra AI OS
 
-Centro de control empresarial privado del grupo Espinal Guerra. Fase 1: fundación técnica, navegación y panel ejecutivo. No conecta sistemas comerciales, no ejecuta agentes ni automatizaciones y no modifica sistemas de producción.
+Centro de control empresarial privado del grupo Espinal Guerra. Fase 1: fundación técnica, navegación y panel ejecutivo. No conecta sistemas comerciales, no ejecuta agentes ni automatizaciones.
 
 ## Requisitos e instalación
 
@@ -74,45 +74,59 @@ npm test
 
 Las pruebas HTTP levantan temporalmente el build de producción en el puerto 3187 y verifican que las ocho rutas privadas y el login bloqueen acceso sin configuración, además de la pantalla pendiente y cabeceras de seguridad. No requieren credenciales ni contactan Supabase. Ejecuta estas pruebas con un build sin variables Supabase, como en esta fase. La autenticación completa, las cookies de sesión y las políticas SQL requieren validación con un proyecto real autorizado; no se presentan como probadas sin ese proyecto.
 
-## Despliegue futuro (no ejecutado)
+## Identidad corporativa · Fase 1.2
 
-1. Revisar el PR, aplicar y comprobar RLS en un proyecto Supabase autorizado para el destino.
-2. Configurar ambas variables públicas en el proveedor antes del build, HTTPS y la URL del sitio en Supabase. No copiar `.env.local` al repositorio.
-3. Ejecutar `npm ci`, las comprobaciones anteriores y `npm run build`.
-4. Ejecutar `npm start` o usar un proveedor compatible con Next.js y App Router.
-5. Verificar: usuario anónimo → login; usuario sin membresía → acceso pendiente; miembro autorizado → panel; cierre de sesión → rutas bloqueadas. Confirmar aislamiento con dos organizaciones antes de registrar datos reales.
+`src/config/corporate-identity.ts` centraliza nombre de empresa, nombre comercial, eslogan, `logoPrincipal`, `logoWhite`, paleta, tipografías y opciones de visualización. El documento aplica las variables CSS desde esa misma configuración; los componentes no duplican rutas de logos. Montserrat (títulos y métricas) y Poppins (texto y controles) se sirven localmente mediante Fontsource, con licencia OFL y sin llamadas a Google Fonts.
 
-No se ha desplegado esta aplicación ni se ha conectado una base de producción.
+Paleta oficial: `#0A1F44`, `#1E3A6D`, `#4A6FA5`, `#E6ECF4`, `#F7F9FC` y `#2B2F33`, además de blanco y rojo semántico para errores. H1 32–40 px, H2 26–32 px, H3 20 px, cuerpo/menú/controles 16 px, descripciones y enlaces 15–16 px, auxiliares desde 14 px. Los textos activos usan azul corporativo sobre azul claro para contraste AA.
 
-## Fase 1.1 · Legibilidad
+`CorporateIdentity` selecciona la variante blanca en el sidebar y la principal en fondos claros. Si el archivo falta o falla, conserva una identificación textual discreta. No se aplican filtros ni se reconstruye el isotipo. Se puede controlar la anchura, altura, eslogan y etiqueta provisional desde la configuración.
 
-La escala tipográfica está centralizada en `src/app/globals.css`: base 16 px, texto auxiliar mínimo 14 px, enlaces de marcas 15 px, navegación y controles 16 px, nombres de marcas 18 px, secciones 22 px y títulos principales de 28–34 px. Los tamaños se expresan en rem y respetan la preferencia tipográfica del navegador. Las tarjetas redistribuyen el contenido sin alturas rígidas; el menú móvil se activa también en tabletas.
+Archivos oficiales pendientes:
 
-Pruebas de presentación (después del build):
+- `public/brand/espinal-guerra-logo.png`: original en color, para fondos claros.
+- `public/brand/espinal-guerra-logo-white.png`: original blanco con transparencia real, para fondo azul.
+- `public/brands/ceo-rentable-os.png`
+- `public/brands/plannerlab.png`
+- `public/brands/star-paper-lab.png`
+- `public/brands/emprendedora-digital-con-ia.png`
+
+No se encontraron archivos gráficos oficiales en el repositorio. Las imágenes mostradas en el chat no están disponibles como archivos binarios en el checkout; no se han extraído ni recreado versiones aproximadas. Consulta [la guía corporativa](public/brand/README.md) y [la guía de marcas](public/brands/README.md). Se admite PNG y SVG original de confianza cambiando únicamente las rutas en la configuración o el catálogo. No incluyas imágenes base64.
+
+## Portafolio de marcas
+
+`BrandPortfolio` genera una sola cuadrícula responsive por página, reutilizada en Dashboard y Marcas. Reemplaza las dos cuadrículas repetidas anteriores y conserva nombre, descripción, estado editorial y enlace a cada espacio. `src/modules/catalog.ts` es el catálogo único con `id`, `slug`, `name`, `description`, `status`, `logo`, `href` e iniciales. Agregar una marca allí amplía automáticamente la cuadrícula y el selector. No cambia consultas ni datos empresariales.
+
+`BrandLogo` usa `next/image` y `object-fit: contain`: mantiene las iniciales mientras carga o si falla, sin recortar ni deformar las imágenes. Al cambiar la ruta se reinicia su estado. Los logos no están representados por imágenes ficticias.
+
+## Pruebas de presentación
+
+Después del build:
 
 ```bash
 npx playwright install chromium
 npm run test:ui
-# Si Chromium ya está instalado en el sistema:
+# Alternativa para Chromium ya instalado:
 CHROMIUM_PATH=/usr/bin/chromium npm run test:ui
 ```
 
-La prueba renderiza los componentes reales de los ocho módulos, inicio de sesión con error y configuración pendiente en una **vista aislada solo de pruebas**, a 320, 390, 768, 1024, 1440 y 1920 px. Comprueba tamaño mínimo, desbordamientos, áreas interactivas y pares de contraste AA (4.5:1), y guarda capturas en `test-results/legibility/`. Los adaptadores de navegación y acciones se sustituyen únicamente dentro del proceso de pruebas; no hay ruta de demostración ni cambios en la autenticación de la aplicación. La vista de prueba no conecta Supabase ni envía formularios. Las once pruebas HTTP existentes siguen verificando el bloqueo de las rutas privadas.
+Las pruebas renderizan los ocho módulos, login con error y configuración pendiente a 320, 390, 768, 1024, 1440 y 1920 px: 60 combinaciones. Verifican fuentes, tamaños, desbordamientos, áreas clicables, cuatro marcas sin cuadrícula duplicada, foco de teclado y nueve pares de contraste AA. Guardan capturas en `test-results/legibility/`.
 
-## Identidad corporativa oficial · Fase 1.1
+También comprueban carga/error de imágenes, cambio de fuente y selección corporativa clara/oscura sin filtros. Se usan formas geométricas solo en la memoria del navegador de pruebas; no se publican como logotipos. Las vistas aíslan navegación y acciones únicamente en las pruebas: no existe un bypass público de autenticación. Las pruebas no validan un inicio de sesión real ni datos de Production.
 
-Paleta: azul profundo `#0A1F44`, corporativo `#1E3A6D`, medio `#4A6FA5`, claro `#E6ECF4`, fondo `#F7F9FC` y texto `#2B2F33`. Se sustituyó la identidad morada por estos colores. El azul medio identifica bordes, iconos y selección; el texto activo usa azul corporativo sobre azul claro para conservar contraste AA.
+## Integración y Production
 
-Montserrat se usa en títulos, subtítulos y métricas; Poppins en cuerpo, menús, formularios y controles. Se distribuyen mediante paquetes Fontsource con licencias OFL, servidas desde la aplicación: no se contacta Google Fonts en ejecución ni durante el build. Pesos cargados: Montserrat 500/600/700 y Poppins 400/500/600/700. Escala actual: H1 32–40 px, H2 26–32 px, H3 20 px, cuerpo/menú/formularios 16 px, descripciones y enlaces 15–16 px, auxiliares desde 14 px. Esta escala sustituye la escala anterior documentada arriba.
+El proyecto Vercel existente debe desplegar desde `main`; no crear otro proyecto ni usar Promote como sustituto de la integración. Después de las comprobaciones, integrar los cambios mediante un push normal permitido por la política del repositorio o mediante el PR existente si la protección lo exige. Nunca forzar la rama ni omitir controles de GitHub.
 
-`src/components/corporate-identity.tsx` centraliza el identificador. No se recibió el archivo gráfico original ni una imagen de referencia con la solicitud: se utiliza texto identificado como provisional, sin recrear el isotipo de alas. Cuando esté disponible el original autorizado, guárdalo en `public/brand/` y proporciona su ruta mediante `logoSrc` a `CorporateIdentity` en el sidebar y la pantalla de acceso. Mantén el original sin alteraciones y un contraste adecuado sobre fondo azul y blanco.
+La URL enlazada desde el repositorio es `https://espinal-guerra-ai-os.vercel.app`. La usuaria también proporcionó `https://espinal-guerra-ai-ilc8va1qt-maribelkeena-3132s-projects.vercel.app` como URL del despliegue actual. No asumir que un despliegue con URL inmutable se actualiza cuando cambia `main`: verificar el nuevo commit y la asignación Production en Vercel.
 
-El panel añade bienvenida con el correo de la sesión ya disponible, accesos rápidos a módulos existentes, resumen comercial y estado operativo. Los nuevos bloques son estados vacíos, sin métricas ficticias, consultas o automatizaciones. Las pruebas de presentación verifican los diez espacios a seis anchos, la carga de ambas fuentes y nueve pares de contraste AA. Se conserva la barrera de autorización existente.
+Verificar después de integrar:
 
-## Logos de marcas y portafolio
+1. GitHub: `main` contiene el commit validado y las comprobaciones requeridas pasan.
+2. Vercel: proyecto existente → Deployments → despliegue asociado al nuevo commit de `main` → **Ready**, asignado a **Production**.
+3. Abrir la URL Production; comprobar login con la cuenta real autorizada y visualización de las cuatro marcas. Cerrar sesión y confirmar que las rutas privadas vuelven a estar bloqueadas.
+4. Revisar que las marcas y datos preexistentes siguen presentes. No crear usuarios ni modificar Supabase para hacer esta verificación.
 
-El catálogo `src/modules/catalog.ts` define `slug`, `name`, `description`, `logo` y `href` por marca. Se mantiene `id` para conservar los enlaces y el selector existentes. `BrandLogo` usa `next/image` con `object-fit: contain` en un contenedor estable; muestra las iniciales mientras carga, si `logo` está vacío o si la imagen falla. El estado se reinicia al cambiar la fuente. Los logos no se recortan ni se deforman.
+Un build local correcto o un push aceptado no prueban que Vercel esté Ready. Si no hay acceso a Vercel o una sesión real autorizada, registrar la limitación y completar esa comprobación manualmente; no declarar autenticación ni datos de Production verificados.
 
-Añade los archivos oficiales en `public/brands/` según su [guía](public/brands/README.md). Las rutas PNG están preparadas; para usar SVG original autorizado, cambia la extensión del campo `logo`. No se han suministrado logos oficiales de las cuatro marcas: las iniciales siguen siendo un recurso provisional, no logos reales.
-
-El dashboard y Marcas muestran las tarjetas con acceso al espacio de trabajo y una sección **Portafolio empresarial** con las cuatro marcas, incluso al filtrar el contexto de las tarjetas. Las pruebas `npm run test:ui` comprueban el componente con imágenes ausentes, fallidas y válidas, preservación de proporciones y reemplazo de fuente, además de la revisión responsive de los ocho módulos y pantallas de acceso. La imagen sintética de estas pruebas existe solo dentro del navegador de pruebas y no se publica como logo de ninguna marca.
+Esta fase termina los ajustes visuales. Ventas/CRM, inteligencia artificial y automatizaciones corresponden a la Fase 2 y no se implementan aquí.

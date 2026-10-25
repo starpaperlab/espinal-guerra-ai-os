@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+import { corporateTheme } from "@/config/corporate-identity";
 import type { Metadata } from "next";
 import "@fontsource/montserrat/latin-500.css";
 import "@fontsource/montserrat/latin-600.css";
@@ -16,7 +18,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html lang="es" style={corporateTheme as CSSProperties}>
       <body>{children}</body>
     </html>
   );
