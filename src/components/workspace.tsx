@@ -1,0 +1,314 @@
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Layers3,
+  UsersRound,
+  Megaphone,
+  Workflow,
+  Wallet,
+  Code2,
+  Settings2,
+  ArrowUpRight,
+  ArrowRight,
+  ShieldCheck,
+  LogOut,
+  Menu,
+  CircleHelp,
+  Sparkles,
+} from "lucide-react";
+import { modules, brands, type Module, selectedBrand } from "@/modules/catalog";
+import { BrandSelector } from "./brand-selector";
+import { signOut } from "@/app/login/actions";
+const icons = {
+  dashboard: LayoutDashboard,
+  brands: Layers3,
+  sales: UsersRound,
+  marketing: Megaphone,
+  operations: Workflow,
+  finance: Wallet,
+  technology: Code2,
+  settings: Settings2,
+};
+export function Workspace({
+  module,
+  brandId,
+  email,
+}: {
+  module: Module;
+  brandId?: string;
+  email?: string;
+}) {
+  const brand = selectedBrand(brandId);
+  const suffix = brand ? `?marca=${brand.id}` : "";
+  const navigation = (
+    <>
+      <div className="wordmark">
+        <div className="logo-mark">
+          EG<span>✦</span>
+        </div>
+        <div>
+          ESPINAL GUERRA<small>AI OPERATING SYSTEM</small>
+        </div>
+      </div>
+      <p className="nav-label">WORKSPACE</p>
+      <nav aria-label="Navegación principal">
+        {modules.map((m) => {
+          const Icon = icons[m.icon];
+          return (
+            <Link
+              key={m.slug}
+              href={`/${m.slug}${suffix}`}
+              className={`nav-link ${m.slug === module.slug ? "active" : ""}`}
+              aria-current={m.slug === module.slug ? "page" : undefined}
+            >
+              <Icon size={19} />
+              {m.name}
+              {m.slug === module.slug && <span className="active-dot" />}
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="sidebar-note">
+        <ShieldCheck size={20} />
+        <strong>Tu organización, conectada.</strong>
+        <p>Un espacio privado para construir lo que sigue.</p>
+        <span>FASE 1 · FUNDACIÓN</span>
+      </div>
+      <div className="sidebar-bottom">
+        <span className="avatar">EG</span>
+        <div>
+          Espinal Guerra<small>Espacio corporativo</small>
+        </div>
+      </div>
+    </>
+  );
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">{navigation}</aside>
+      <div className="main-shell">
+        <header className="topbar">
+          <span className="breadcrumb">
+            Espinal Guerra <span>/</span> <strong>{module.name}</strong>
+          </span>
+          <div className="header-right">
+            <span className="private-badge">
+              <span />
+              Espacio privado
+            </span>
+            <form action={signOut}>
+              <button
+                className="icon-button"
+                aria-label="Cerrar sesión"
+                title={email ? `Cerrar sesión: ${email}` : "Cerrar sesión"}
+              >
+                <LogOut size={18} />
+              </button>
+            </form>
+            <span className="avatar small">EG</span>
+          </div>
+        </header>
+        <details className="mobile-nav">
+          <summary>
+            <Menu size={18} /> Menú de navegación
+          </summary>
+          {navigation}
+        </details>
+        <main className="content">
+          <div className="page-heading">
+            <div>
+              <p className="eyebrow">CENTRO DE CONTROL</p>
+              <h1>{module.name}</h1>
+              <p className="muted">{module.description}</p>
+            </div>
+            <BrandSelector value={brand?.id} />
+          </div>
+          {module.slug === "dashboard" ? (
+            <>
+              <section className="welcome-banner">
+                <div>
+                  <span className="banner-label">
+                    <Sparkles size={14} /> TU VISIÓN, EN UN SOLO LUGAR
+                  </span>
+                  <h2>
+                    El siguiente capítulo de
+                    <br />
+                    Espinal Guerra empieza aquí.
+                  </h2>
+                  <p>
+                    Conecta la visión de tus marcas con las decisiones de cada
+                    día.
+                  </p>
+                  <Link href={`/marcas${suffix}`} className="banner-link">
+                    Explorar mis marcas <ArrowRight size={16} />
+                  </Link>
+                </div>
+                <div className="banner-art" aria-hidden="true">
+                  <div className="orbit orbit-one" />
+                  <div className="orbit orbit-two" />
+                  <div className="art-center">
+                    EG<span>✦</span>
+                  </div>
+                  <span className="art-label">
+                    UN GRUPO. MÚLTIPLES POSIBILIDADES.
+                  </span>
+                </div>
+              </section>
+              <div className="section-heading">
+                <h2>Panorama del grupo</h2>
+                <span>Sin fuentes de datos conectadas</span>
+              </div>
+              <section className="metrics" aria-label="Indicadores ejecutivos">
+                {[
+                  {
+                    label: "Marcas en catálogo",
+                    value: String(brand ? 1 : brands.length),
+                    note: "Catálogo inicial",
+                    icon: Layers3,
+                  },
+                  {
+                    label: "Ventas",
+                    value: "—",
+                    note: "Sin datos conectados",
+                    icon: Wallet,
+                  },
+                  {
+                    label: "Prospectos",
+                    value: "—",
+                    note: "CRM pendiente de configurar",
+                    icon: UsersRound,
+                  },
+                  {
+                    label: "Operaciones",
+                    value: "—",
+                    note: "Sin procesos registrados",
+                    icon: Workflow,
+                  },
+                ].map((item) => (
+                  <article className="metric card" key={item.label}>
+                    <div>
+                      <span>{item.label}</span>
+                      <item.icon size={18} />
+                    </div>
+                    <strong>{item.value}</strong>
+                    <small>{item.note}</small>
+                  </article>
+                ))}
+              </section>
+              <BrandGrid brandId={brand?.id} />
+              <section className="lower-grid">
+                <div className="card empty-card">
+                  <div className="section-heading">
+                    <h2>Actividad reciente</h2>
+                    <span className="tag">Sin actividad</span>
+                  </div>
+                  <div className="empty-content">
+                    <Workflow size={26} />
+                    <h3>Aquí comenzará la historia</h3>
+                    <p>
+                      Cuando registres actividad en tus módulos,
+                      <br />
+                      podrás consultarla desde este espacio.
+                    </p>
+                  </div>
+                </div>
+                <div className="card foundation">
+                  <span className="soft-icon">
+                    <ShieldCheck size={23} />
+                  </span>
+                  <h2>Una base para crecer</h2>
+                  <p>
+                    Tu espacio de trabajo está en su primera fase. Los módulos
+                    están preparados para evolucionar contigo.
+                  </p>
+                  <Link href="/tecnologia">
+                    Ver estado del sistema <ArrowRight size={16} />
+                  </Link>
+                  <div className="foundation-status">
+                    <span />
+                    Integraciones sin conectar
+                  </div>
+                </div>
+              </section>
+            </>
+          ) : module.slug === "marcas" ? (
+            <BrandGrid brandId={brand?.id} />
+          ) : (
+            <section className="card module-empty">
+              <span className="soft-icon">
+                {(() => {
+                  const Icon = icons[module.icon];
+                  return <Icon size={28} />;
+                })()}
+              </span>
+              <span className="tag">
+                {module.slug === "configuracion"
+                  ? "Administración inicial"
+                  : "Módulo en preparación"}
+              </span>
+              <h2>
+                {module.slug === "tecnologia"
+                  ? "Integraciones futuras, una base segura"
+                  : module.slug === "configuracion"
+                    ? "Tu espacio empresarial"
+                    : `Tu espacio de ${module.name.toLowerCase()}`}
+              </h2>
+              <p>
+                {module.slug === "tecnologia"
+                  ? "Arquitectura preparada para n8n, Google Sheets, GitHub y sistemas comerciales. Ningún servicio está conectado y no hay automatizaciones activas."
+                  : module.slug === "configuracion"
+                    ? "La autenticación y la membresía se verifican en el servidor. La gestión de usuarios y permisos se administra en Supabase durante esta fase."
+                    : "Este módulo todavía no registra información. Sus funciones se incorporarán en las próximas fases, con datos y procesos autorizados."}
+              </p>
+              <div className="empty-context">
+                {brand?.name ?? "Todas las marcas"} · Sin datos operativos
+              </div>
+              <Link className="button secondary" href={`/dashboard${suffix}`}>
+                Volver al panel <ArrowRight size={16} />
+              </Link>
+            </section>
+          )}
+          <footer className="footer">
+            <span>© {new Date().getFullYear()} Espinal Guerra · AI OS</span>
+            <span>
+              <CircleHelp size={14} /> Fase 1 · Fundación técnica
+            </span>
+          </footer>
+        </main>
+      </div>
+    </div>
+  );
+}
+function BrandGrid({ brandId }: { brandId?: string }) {
+  return (
+    <section>
+      <div className="section-heading">
+        <h2>Nuestras marcas</h2>
+        <span>Portafolio empresarial</span>
+      </div>
+      <div className="brands-grid">
+        {brands
+          .filter((b) => !brandId || b.id === brandId)
+          .map((b) => (
+            <Link
+              className="card brand-card"
+              key={b.id}
+              href={`/dashboard?marca=${b.id}`}
+            >
+              <div className="brand-card-top">
+                <span className={`brand-avatar ${b.color}`}>{b.initials}</span>
+                <ArrowUpRight size={18} />
+              </div>
+              <h3>{b.name}</h3>
+              <p>{b.description}</p>
+              <div className="brand-card-bottom">
+                <span className="tag">En catálogo</span>
+                <span>
+                  Ver espacio <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+          ))}
+      </div>
+    </section>
+  );
+}

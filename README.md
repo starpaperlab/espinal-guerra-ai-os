@@ -1,1 +1,85 @@
-# espinal-guerra-ai-os
+# Espinal Guerra AI OS
+
+Centro de control empresarial privado del grupo Espinal Guerra. Fase 1: fundación técnica, navegación y panel ejecutivo. No conecta sistemas comerciales, no ejecuta agentes ni automatizaciones y no modifica sistemas de producción.
+
+## Requisitos e instalación
+
+- Node.js 22.13 o posterior (validado con Node 24), npm 11.
+- Proyecto Supabase **de desarrollo autorizado**, necesario para acceder al área privada.
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Completa `.env.local` con la URL HTTPS y la clave pública real de tu proyecto:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+No guardes credenciales en Git. No uses `service_role`, claves secretas ni una base de producción. Las dos variables públicas identifican el proyecto; la protección de datos depende de autenticación, membresías y RLS. Reinicia desarrollo o reconstruye tras cambiar la configuración.
+
+Sin configuración válida, todas las rutas privadas redirigen a `/configuracion-pendiente`; no existe modo público ni bypass de demostración.
+
+## Supabase y autorización
+
+1. En un proyecto de desarrollo vacío y autorizado, ejecuta `supabase/migrations/202610250001_foundation.sql` desde el editor SQL o mediante tu proceso de migraciones. No se aplica automáticamente.
+2. Desactiva el registro público en Authentication → Providers/Email y configura las políticas de contraseña y límites de autenticación. La aplicación no ofrece registro público.
+3. Crea o invita al primer usuario autorizado desde Supabase y establece su contraseña mediante el flujo oficial de Supabase.
+4. Desde el editor SQL, crea una organización y asigna el UUID real del usuario a `organization_members` con el UUID de esa organización y rol `owner`. No se generan usuarios, contraseñas ni membresías ficticias.
+5. Accede por `/login`. Un usuario autenticado sin membresía verificable verá `/acceso-pendiente`.
+
+La migración activa RLS y solo permite lecturas a miembros. Los usuarios no pueden crear ni cambiar sus permisos desde el cliente. Para comprobar aislamiento antes de usar datos reales: crea dos organizaciones y dos usuarios de prueba autorizados; verifica con cada sesión que las consultas a `organizations`, `organization_members` y `brands` no devuelvan filas de la otra organización, y que INSERT/UPDATE/DELETE con clave pública sean rechazados. No otorgues permisos de escritura generales para evitar estas restricciones.
+
+Cada página privada y su layout llaman a la misma verificación de sesión y membresía en el servidor. `proxy.ts` renueva cookies; no es la única barrera de autorización. Los errores de membresía bloquean acceso. Las futuras acciones, endpoints y consultas deben volver a autorizar y filtrar por `organization_id` y por marca; nunca confiar en IDs enviados por el navegador. Los roles se almacenan, pero esta fase no ofrece operaciones privilegiadas ni administración de permisos en la UI.
+
+## Funcionalidad de esta fase
+
+- Panel ejecutivo responsive, menú móvil, encabezado y navegación en español.
+- Módulos: Dashboard, Marcas, Ventas y CRM, Marketing, Operaciones, Finanzas, Tecnología y Configuración.
+- Selector de marca conservado mediante `?marca=` y enlaces de navegación.
+- Catálogo editorial: CEO Rentable OS, PlannerLab, Star Paper Lab y Emprendedora Digital con IA.
+- Ventas, prospectos y operaciones sin cifras ficticias: aparecen como datos no conectados.
+- Inicio y cierre de sesión Supabase, protección por membresía de organización.
+- Contratos para futuras integraciones; no hay conexiones n8n, Sheets, GitHub o comerciales.
+
+El catálogo es estático y compartido como información inicial del producto; no representa marcas cargadas desde la tabla `brands`. El selector cambia el contexto visual del catálogo, no consulta ni modifica registros operativos. Las tablas preparan el aislamiento multiempresa para futuras fases. Si un usuario pertenece a más de una organización, esta fase verifica una membresía disponible; todavía no ofrece selector de organización ni consultas operativas entre organizaciones.
+
+## Arquitectura
+
+```text
+src/app/(private)/       Layout protegido y rutas de módulos
+src/app/login/           Acceso y acciones de sesión del servidor
+src/components/         Shell corporativo y componentes visuales
+src/modules/catalog.ts  Catálogo inicial de módulos y marcas
+src/lib/auth.ts         Verificación central de sesión y membresía
+src/lib/supabase/        Configuración y cliente exclusivo de servidor
+src/proxy.ts            Renovación de sesión mediante cookies
+src/integrations/       Contratos sin conectividad ni automatizaciones
+supabase/migrations/    Esquema inicial y políticas RLS
+ tests/                 Pruebas HTTP de bloqueo sin configuración
+```
+
+No agregues caché compartida para datos privados; las rutas privadas son dinámicas. La organización debe formar parte de toda consulta futura. No añadas secretos de integraciones hasta implementar y autorizar su uso.
+
+## Comprobaciones
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm test
+```
+
+Las pruebas HTTP levantan temporalmente el build de producción en el puerto 3187 y verifican que las ocho rutas privadas y el login bloqueen acceso sin configuración, además de la pantalla pendiente y cabeceras de seguridad. No requieren credenciales ni contactan Supabase. Ejecuta estas pruebas con un build sin variables Supabase, como en esta fase. La autenticación completa, las cookies de sesión y las políticas SQL requieren validación con un proyecto real autorizado; no se presentan como probadas sin ese proyecto.
+
+## Despliegue futuro (no ejecutado)
+
+1. Revisar el PR, aplicar y comprobar RLS en un proyecto Supabase autorizado para el destino.
+2. Configurar ambas variables públicas en el proveedor antes del build, HTTPS y la URL del sitio en Supabase. No copiar `.env.local` al repositorio.
+3. Ejecutar `npm ci`, las comprobaciones anteriores y `npm run build`.
+4. Ejecutar `npm start` o usar un proveedor compatible con Next.js y App Router.
+5. Verificar: usuario anónimo → login; usuario sin membresía → acceso pendiente; miembro autorizado → panel; cierre de sesión → rutas bloqueadas. Confirmar aislamiento con dos organizaciones antes de registrar datos reales.
+
+No se ha desplegado esta aplicación ni se ha conectado una base de producción.
