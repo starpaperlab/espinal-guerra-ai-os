@@ -1491,3 +1491,39 @@ dialog::backdrop {
     width: 100%;
   }
 }
+
+/* Meta Ads uses the existing corporate scale and controls. */
+.meta-hub > section {
+  margin-bottom: var(--space-3);
+}
+.meta-campaigns {
+  display: grid;
+  gap: var(--space-3);
+}
+.meta-campaign {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+}
+.meta-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+}
+.meta-stat-grid dt {
+  color: var(--blue-corporate);
+  font-size: var(--text-sm);
+}
+.meta-stat-grid dd {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.meta-results {
+  padding-left: var(--space-3);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}

@@ -170,3 +170,7 @@ La organización del grupo se vincula una vez en Supabase. Las fuentes autorizad
 Configuración permite consultar marcas reales y gestionar fuentes/borradores con sesión autorizada. Se preparó outbox nativo transaccional, leases, intentos e infraestructura de conversiones. No hay IA/Resend/worker activo ni secuencias enviándose. El diagnóstico CEO existente solo tiene una fuente deshabilitada y un recorrido en borrador; no fue duplicado.
 
 Para CRM, autenticación y la gestión privada nativa siguen siendo obligatorias solo las dos variables públicas Supabase ya utilizadas. Las claves de recepción externa son opcionales mientras esa conexión esté desactivada. No borrar variables usadas por una integración legacy: la tabla de la guía diferencia ambos modos.
+
+### Meta Ads · Fase 3.2
+
+Marketing incorpora consultas de Meta exclusivamente de lectura y persistencia por cuenta/marca. Requiere aplicar la migración `202610250007_meta_ads_readonly.sql`, vincular la cuenta con la marca existente y sincronizar con una sesión administradora. `META_ACCESS_TOKEN` se utiliza solo en servidor. Consulta [configuración, seguridad, estados y verificación real](docs/meta-ads-3.2.md). No crea anuncios ni atribuye automáticamente ventas o prospectos al CRM.

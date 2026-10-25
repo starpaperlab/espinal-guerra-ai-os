@@ -38,11 +38,14 @@ try {
       import {crmFixture,crmDetailFixture} from './tests/crm/fixtures';
       import {EnterpriseView} from './src/modules/automation/view';
       import {enterpriseFixture} from './tests/crm/enterprise-fixtures';
+      import {MarketingView} from './src/modules/marketing/view';
+      import {marketingFixture,marketingSuccessFixture} from './tests/crm/meta-fixtures';
       export const screens = Object.fromEntries(modules.map(module => [module.slug, renderToStaticMarkup(<Workspace module={module}/>)]));
       screens.login = renderToStaticMarkup(await Login({searchParams: Promise.resolve({error: 'credentials'})}));
       screens.pending = renderToStaticMarkup(<Pending/>);
       for(const [name,data] of Object.entries({'native-config':enterpriseFixture,'native-pending':{...enterpriseFixture,bound:false,error:'Migración 006 pendiente'}}))screens[name]=renderToStaticMarkup(<Workspace module={modules.find(m=>m.slug==='configuracion')}><EnterpriseView data={data}/></Workspace>);
 
+      for(const [name,data] of Object.entries({'meta-pending':{...marketingFixture,error:'Migración 007 pendiente'},'meta-success':marketingSuccessFixture,'meta-empty':{...marketingSuccessFixture,metrics:[],sync:{...marketingSuccessFixture.sync,summary:null,campaign_count:0}},'meta-error':{...marketingSuccessFixture,latestAttempt:{...marketingSuccessFixture.sync,status:'error',error_code:'TOKEN_EXPIRED'}}}))screens[name]=renderToStaticMarkup(<Workspace module={modules.find(m=>m.slug==='marketing')}><MarketingView data={data}/></Workspace>);
       for(const [name,data] of Object.entries({'crm-vacio':crmFixture,'crm-bandeja':{...crmDetailFixture,detail:null},'crm-ficha':crmDetailFixture,'crm-pipeline':{...crmDetailFixture,query:{vista:'pipeline'}},'crm-seguimiento':{...crmDetailFixture,query:{vista:'seguimiento'}},'crm-pendiente':{...crmFixture,summary:null,error:'Migración pendiente de aplicar'}})) {
         screens[name]=renderToStaticMarkup(<Workspace module={modules.find(m=>m.slug==='ventas')} headerControl={<CrmBrandFilter data={data}/>}><CrmView data={data}/></Workspace>);
       }
@@ -80,7 +83,7 @@ try {
                   ? `export const useRouter = () => ({ push() {} }); export const usePathname = () => '/dashboard'; export function redirect() { throw new Error('Unexpected redirect in isolated presentation fixture'); }`
                   : path.includes("config")
                     ? `export const getSupabaseConfig = () => true;`
-                    : `export async function signIn() {} export async function signOut() {} export async function createLead() {} export async function updateLead() {} export async function createOpportunity() {} export async function moveOpportunity() {} export async function createActivity() {} export async function completeActivity() {} export async function createProposal() {} export async function reconcileEnterprise() {} export async function saveCaptureSource() {} export async function setCaptureSourceState() {} export async function saveDraftAutomation() {}`,
+                    : `export async function signIn() {} export async function signOut() {} export async function createLead() {} export async function updateLead() {} export async function createOpportunity() {} export async function moveOpportunity() {} export async function createActivity() {} export async function completeActivity() {} export async function createProposal() {} export async function reconcileEnterprise() {} export async function saveCaptureSource() {} export async function setCaptureSourceState() {} export async function saveDraftAutomation() {} export async function bindCeoMetaAccount() {} export async function syncMetaAccount() {}`,
           }));
         },
       },
@@ -215,6 +218,7 @@ try {
           "crm-ficha",
           "crm-pipeline",
           "native-config",
+          "meta-success",
         ].includes(name) &&
         [390, 768, 1440].includes(width)
       )
