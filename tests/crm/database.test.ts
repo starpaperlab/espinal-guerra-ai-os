@@ -2,10 +2,20 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { randomUUID, randomBytes, createHmac } from "node:crypto";
+import { createRequire } from "node:module";
 import { PGlite } from "@electric-sql/pglite";
 import { leadSchema, webhookSchema } from "../../src/modules/crm/schema";
 import { receiveLead } from "../../src/modules/crm/webhook";
 
+const load = createRequire(import.meta.url);
+const { prepareCrmRequest } = load(
+  "../../integrations/n8n/prepare-crm-request.cjs",
+) as {
+  prepareCrmRequest: (
+    input: Record<string, unknown>,
+    secret: string,
+  ) => { body: string; headers: Record<string, string> };
+};
 test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t) => {
   const db = new PGlite();
   const org = randomUUID(),
@@ -395,6 +405,42 @@ test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t)
         });
       },
     );
+    await t.test(
+      "Migración de captación conserva registros y requiere permisos de servidor",
+      async () => {
+        const before = await db.query(
+          "select id,is_test from crm_leads order by id",
+        );
+        await db.exec(
+          await readFile(
+            "supabase/migrations/202610250003_n8n_capture_fields.sql",
+            "utf8",
+          ),
+        );
+        assert.deepEqual(
+          (await db.query("select id,is_test from crm_leads order by id")).rows,
+          before.rows,
+        );
+        await db.exec("set role service_role");
+        try {
+          assert.equal(
+            (
+              await db.query<{ v: number }>(
+                "select crm_inbound_contract_version() v",
+              )
+            ).rows[0].v,
+            2,
+          );
+        } finally {
+          await db.exec("reset role");
+        }
+        await asUser(user, async () => {
+          await assert.rejects(() =>
+            db.query("select crm_inbound_contract_version()"),
+          );
+        });
+      },
+    );
     const secret = randomBytes(48).toString("hex");
     const event = {
       event_id: randomUUID(),
@@ -519,6 +565,135 @@ test("CRM sobre PostgreSQL aislado: persistencia, RLS y receptor n8n", async (t)
           ).status,
           409,
         );
+      },
+    );
+    await t.test(
+      "Adaptador → receptor → PostgreSQL conserva el contrato comercial completo y excluye las pruebas",
+      async () => {
+        const input = {
+          ...event,
+          event_id: randomUUID(),
+          external_id: randomUUID(),
+          campaign: "Campaña de prueba",
+          message: "Mensaje de captación",
+          budget: "RD$ 100",
+          urgency: "30 días",
+          score: "90",
+          classification: "hot",
+          problem: "Problema de prueba",
+          recommendation: "Seguimiento de prueba",
+        };
+        const prepared = prepareCrmRequest(input, secret);
+        const response = await receiveLead(
+          new Request("https://example.invalid/api/integrations/n8n/leads", {
+            method: "POST",
+            headers: prepared.headers,
+            body: prepared.body,
+          }),
+          deps,
+        );
+        assert.equal(response.status, 200);
+        const result = await response.json();
+        const row = (
+          await db.query<{
+            campaign: string;
+            budget: string;
+            urgency: string;
+            score: number;
+            classification: string;
+            is_test: boolean;
+            notes: string;
+            ai_recommendation: string;
+          }>(
+            "select l.*,c.notes from crm_leads l join crm_contacts c on l.contact_id=c.id where l.id=$1",
+            [result.lead_id],
+          )
+        ).rows[0];
+        assert.equal(row.campaign, input.campaign);
+        assert.equal(row.budget, input.budget);
+        assert.equal(row.urgency, input.urgency);
+        assert.equal(row.notes, input.message);
+        assert.equal(row.score, 90);
+        assert.equal(row.classification, "HOT");
+        assert.equal(row.ai_recommendation, input.recommendation);
+        assert.equal(row.is_test, true);
+        const replay = await receiveLead(
+          new Request("https://example.invalid/api/integrations/n8n/leads", {
+            method: "POST",
+            headers: prepared.headers,
+            body: prepared.body,
+          }),
+          deps,
+        );
+        assert.equal((await replay.json()).duplicate, true);
+        const sameLead = prepareCrmRequest(
+          { ...input, event_id: randomUUID() },
+          secret,
+        );
+        const repeated = await receiveLead(
+          new Request("https://example.invalid/api/integrations/n8n/leads", {
+            method: "POST",
+            headers: sameLead.headers,
+            body: sameLead.body,
+          }),
+          deps,
+        );
+        assert.equal((await repeated.json()).lead_id, result.lead_id);
+        assert.equal(
+          (
+            await db.query("select * from crm_leads where external_id=$1", [
+              input.external_id,
+            ])
+          ).rows.length,
+          1,
+        );
+        await asUser(user, async () => {
+          const summary = (
+            await db.query<{ s: { hot: number } }>(
+              "select crm_summary($1,null) s",
+              [org],
+            )
+          ).rows[0].s;
+          assert.equal(summary.hot, 1);
+        });
+      },
+    );
+    await t.test(
+      "HOT, WARM y COLD se conservan sin recalificar ni promover pruebas a reales",
+      async () => {
+        for (const classification of ["HOT", "WARM", "COLD"]) {
+          const input = {
+            ...event,
+            event_id: randomUUID(),
+            external_id: randomUUID(),
+            classification,
+          };
+          const first = await receiveLead(request(input), deps);
+          assert.equal(first.status, 200);
+          const result = await first.json();
+          const row = (
+            await db.query<{ classification: string; is_test: boolean }>(
+              "select classification,is_test from crm_leads where id=$1",
+              [result.lead_id],
+            )
+          ).rows[0];
+          assert.equal(row.classification, classification);
+          assert.equal(row.is_test, true);
+          const retry = await receiveLead(
+            request({ ...input, event_id: randomUUID(), is_test: false }),
+            deps,
+          );
+          assert.equal((await retry.json()).lead_id, result.lead_id);
+          assert.equal(
+            (
+              await db.query<{ is_test: boolean }>(
+                "select is_test from crm_leads where id=$1",
+                [result.lead_id],
+              )
+            ).rows[0].is_test,
+            true,
+          );
+        }
       },
     );
     await t.test(

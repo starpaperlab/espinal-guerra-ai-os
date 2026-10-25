@@ -140,3 +140,11 @@ El módulo `/ventas` incorpora persistencia Supabase para contactos, prospectos,
 La [guía de instalación, seguridad, operación y conexión n8n](docs/crm-2.1.md) incluye la auditoría, el modelo, comprobaciones SQL, límites e instrucciones del receptor nuevo `/api/integrations/n8n/leads`. La integración n8n permanece sin conectar hasta configurar el secreto del servidor y realizar el mapeo autorizado del workflow existente. No se han modificado `/api/lead`, n8n, Google Sheets ni comunicaciones automáticas.
 
 Las pruebas del CRM usan PostgreSQL local aislado y las vistas de prueba solo existen en `tests/`. La migración y las operaciones en Production requieren comprobación en la instancia real; no se deducen de un build correcto. No se implementa la Etapa 2.2.
+
+## Etapa 2.2.1 · Captación desde n8n
+
+Se reutiliza `POST /api/integrations/n8n/leads`. La [guía de captación](docs/n8n-captacion.md) contiene auditoría, obtención del JSON real, mapa configurable, firma y configuración HTTP del workflow existente. No se reconstruye el CRM ni se modifican los nodos de IA, Sheets o Gmail.
+
+Aplicar una vez `supabase/migrations/202610250003_n8n_capture_fields.sql` para persistir campaña, mensaje, presupuesto y urgencia. El receptor verifica la versión SQL antes de escribir; sin esta actualización no acepta eventos nuevos para evitar omitir campos. Las tablas y registros anteriores se conservan. Los errores exponen únicamente un ID de correlación y datos de diagnóstico seguros.
+
+`integrations/n8n/field-map.example.json` debe completarse con las rutas verificadas del JSON real del nodo **Code in JavaScript**; sus valores `null` no son una configuración activa. El helper de firma se prueba en local, pero no está conectado al n8n real. No enviar pruebas como prospectos reales ni incluir secretos en los archivos.

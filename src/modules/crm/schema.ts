@@ -103,6 +103,10 @@ export const webhookSchema = z
       })
       .strict(),
     source: z.string().trim().min(1).max(100),
+    campaign: text(200),
+    message: text(10000),
+    budget: text(300),
+    urgency: text(300),
     service: text(300),
     need: text(10000),
     score: z.number().int().min(0).max(100).nullable(),

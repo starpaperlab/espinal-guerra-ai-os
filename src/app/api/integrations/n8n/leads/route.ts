@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseConfig } from "@/lib/supabase/config";
@@ -14,17 +15,36 @@ export async function POST(request: Request) {
     !secret ||
     secret.length < 32 ||
     !z.uuid().safeParse(organizationId).success
-  )
-    return Response.json(
-      { error: "Integración CRM no configurada" },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
+  ) {
+    const requestId = randomUUID();
+    console.warn(
+      JSON.stringify({
+        event: "crm_webhook",
+        request_id: requestId,
+        status: 503,
+        code: "NOT_CONFIGURED",
+      }),
     );
+    return Response.json(
+      { error: "Integración CRM no configurada", request_id: requestId },
+      {
+        status: 503,
+        headers: { "Cache-Control": "no-store", "X-CRM-Request-Id": requestId },
+      },
+    );
+  }
   const client = createClient(config.url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return receiveLead(request, {
     secret,
     organizationId: organizationId!,
+    ensureReady: async () => {
+      const { data, error } = await client.rpc("crm_inbound_contract_version");
+      return !error && data === 2;
+    },
+    report: (entry) =>
+      console.warn(JSON.stringify({ event: "crm_webhook", ...entry })),
     ingest: async (event, hash) =>
       client.rpc("crm_ingest_lead", {
         p_organization_id: organizationId,

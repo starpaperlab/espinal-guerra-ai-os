@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "paths": {
+    "event_id": null,
+    "external_id": null,
+    "contact.name": null,
+    "contact.email": null,
+    "contact.phone": null,
+    "contact.company": null,
+    "source": null,
+    "campaign": null,
+    "service": null,
+    "message": null,
+    "need": null,
+    "budget": null,
+    "urgency": null,
+    "score": null,
+    "classification": null,
+    "problem": null,
+    "opportunity": null,
+    "recommendation": null,
+    "next_action": null,
+    "occurred_at": null,
+    "evaluated_at": null
+  },
+  "constants": { "brand_id": null, "is_test": true }
+}
