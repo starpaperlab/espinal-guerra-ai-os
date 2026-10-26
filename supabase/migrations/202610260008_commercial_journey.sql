@@ -1,4 +1,16 @@
 begin;
+-- EXCLUSIVO del Supabase Espinal Guerra AI OS. Requiere 005 y 006.
+do $$ begin
+ if to_regclass('public.crm_leads') is null then
+  raise exception 'AI_OS_PRECHECK: falta public.crm_leads. Verifica el proyecto Espinal Guerra AI OS y su CRM existente antes de ejecutar 008.' using errcode='P0001';
+ end if;
+ if not exists(select 1 from information_schema.columns where table_schema='public' and table_name='crm_leads' and column_name='capture_metadata') then
+  raise exception 'AI_OS_PRECHECK: falta capture_metadata de la migracion 005. Revisa docs/sql/commercial-project-preflight.sql y el historial del proyecto antes de aplicar dependencias.' using errcode='P0001';
+ end if;
+ if to_regclass('public.crm_capture_sources') is null or to_regclass('public.crm_enterprise_settings') is null or to_regclass('public.crm_conversions') is null then
+  raise exception 'AI_OS_PRECHECK: falta la estructura completa de 006 (crm_capture_sources, crm_enterprise_settings, crm_conversions). Verifica con docs/sql/commercial-project-preflight.sql; 008 necesita 006 aplicada en AI OS. No crees estas tablas manualmente ni ejecutes el SQL de CEO aqui.' using errcode='P0001';
+ end if;
+end $$;
 create table if not exists public.crm_commercial_events(
  id uuid primary key default gen_random_uuid(),organization_id uuid not null,brand_id uuid not null,lead_id uuid not null,
  event_key text not null,kind text not null check(kind in ('consent.updated','page.viewed','checkout.started','diagnostic.completed','registration.completed','trial.started','trial.ended','subscription.cancelled','subscription.paid','email.accepted','email.failed')),

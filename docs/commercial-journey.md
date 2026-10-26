@@ -18,6 +18,16 @@ El CEO Score se guarda como diagnóstico, **no** como lead_score o HOT/WARM/COLD
 
 `crm_commercial_report` es SECURITY INVOKER, valida membresía y respeta RLS; aparece en Ventas y Marketing. Excluye pruebas, separa monedas y distingue aceptación por Resend de entrega real. La prueba activa se calcula a partir de su fin confirmado y de los eventos recibidos de pago/cancelación; el informe no consulta al proveedor en vivo. Las agrupaciones de campaña muestran UTM declarada o ausencia de evidencia; no afirman atribución de Meta ni reconstruyen conversiones históricas.
 
+## Diagnosticar dependencias antes de ejecutar más SQL
+
+Ejecutar `docs/sql/commercial-project-preflight.sql` en ambos proyectos existentes y anotar el nombre mostrado en Supabase. Es solo lectura: usa to_regclass y catálogo, sin consultar contactos ni depender de tablas/funciones ausentes.
+
+- **CEO 202610260001** necesita public.leads en el proyecto conectado a app.ceorentable.com. Si se ejecutó en AI OS, cambiar al proyecto CEO. No crear leads en AI OS.
+- **AI OS 008** necesita el CRM existente, capture_metadata de 005 y las tablas de 006. Ahora comprueba esas dependencias antes de crear sus objetos y muestra AI_OS_PRECHECK.
+- Si la auditoría confirma 005 y que **las seis tablas 006 están ausentes**, aplicar completa `202610250006_multibrand_native_foundation.sql` una vez en AI OS; después 008. 006 no crea marcas ni organizaciones automáticamente. Su bootstrap posterior reutiliza la empresa auditada.
+- Si aparecen solo algunas tablas 006, detenerse y revisar el estado parcial. 006 no es una migración reaplicable; no ejecutar de nuevo a ciegas ni fabricar tablas individuales.
+- Mantener las banderas nuevas deshabilitadas hasta completar estos pasos. El código de migraciones no sustituye la comprobación del proyecto real.
+
 ## Configuración manual necesaria
 
 Las migraciones finales son reaplicables y sus pruebas verifican que conservan datos. Si se ejecutó una copia intermedia, reaplicar los archivos finales del commit de entrega.
