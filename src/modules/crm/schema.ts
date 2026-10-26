@@ -1,3 +1,4 @@
+import { journeySchema } from "@/modules/journey/schema";
 import { z } from "zod";
 export const stages = {
   nuevo: "Nuevo",
@@ -93,6 +94,7 @@ export const webhookSchema = z
     event_id: z.string().min(1).max(160),
     external_id: z.string().min(1).max(160),
     type: z.literal("lead.created"),
+    journey: journeySchema.optional(),
     brand_id: z.uuid().optional(),
     capture_source_key: z
       .string()

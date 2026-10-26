@@ -174,3 +174,7 @@ Para CRM, autenticación y la gestión privada nativa siguen siendo obligatorias
 ### Meta Ads · Fase 3.2
 
 Marketing incorpora consultas de Meta exclusivamente de lectura y persistencia por cuenta/marca. Requiere aplicar la migración `202610250007_meta_ads_readonly.sql`, vincular la cuenta con la marca existente y sincronizar con una sesión administradora. `META_ACCESS_TOKEN` se utiliza solo en servidor. Consulta [configuración, seguridad, estados y verificación real](docs/meta-ads-3.2.md). No crea anuncios ni atribuye automáticamente ventas o prospectos al CRM.
+
+### Recorrido comercial CEO Rentable
+
+El receptor de fuentes acepta hechos de diagnóstico, registro, prueba y pago; Ventas y Marketing incluyen un informe propio sin pruebas ni ingresos estimados. Requiere la migración comercial 008 y la conexión privada del emisor CEO. Consulta [activación y validación](docs/commercial-journey.md). Prueba local de ambos repositorios: `npm run test:commercial-pair`.

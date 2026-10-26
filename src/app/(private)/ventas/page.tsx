@@ -1,3 +1,4 @@
+import { CommercialReport } from "@/modules/journey/report";
 import { workspaceBrands } from "@/modules/workspace-brands";
 import { Workspace } from "@/components/workspace";
 import { modules } from "@/modules/catalog";
@@ -26,6 +27,7 @@ export default async function SalesPage({
       headerControl={<CrmBrandFilter data={data} />}
     >
       <CrmView data={data} />
+      <CommercialReport brandId={data.selectedBrand?.id} />
     </Workspace>
   );
 }

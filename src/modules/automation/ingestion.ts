@@ -46,14 +46,20 @@ export async function signedIngestion(
       const payload = event as {
         brand_id?: string;
         capture_source_key?: string;
+        journey?: unknown;
       };
       if (payload.capture_source_key)
-        return client.rpc("crm_ingest_configured_source", {
-          p_source_key: payload.capture_source_key,
-          p_provider: provider,
-          p_event: event,
-          p_hash: hash,
-        });
+        return client.rpc(
+          payload.journey
+            ? "crm_ingest_commercial_source"
+            : "crm_ingest_configured_source",
+          {
+            p_source_key: payload.capture_source_key,
+            p_provider: provider,
+            p_event: event,
+            p_hash: hash,
+          },
+        );
       // Compatibility only: the old n8n route still accepts a validated UUID + pinned env org.
       const legacyOrg = process.env.CRM_WEBHOOK_ORGANIZATION_ID;
       if (

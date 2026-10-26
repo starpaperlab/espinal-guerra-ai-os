@@ -1,3 +1,4 @@
+import { CommercialReport } from "@/modules/journey/report";
 import { Workspace } from "@/components/workspace";
 import { modules } from "@/modules/catalog";
 import { workspaceBrands } from "@/modules/workspace-brands";
@@ -27,6 +28,9 @@ export default async function MarketingPage({
       brandId={data.selectedBrand}
     >
       <MarketingView data={data} result={query.resultado} />
+      <CommercialReport
+        brandId={data.brands.find((b) => b.slug === data.selectedBrand)?.id}
+      />
     </Workspace>
   );
 }
