@@ -323,7 +323,8 @@ test("Contrato comercial firmado: CRM, organización, pruebas, atribución y pag
         let report = (
           await db.query<{
             r: {
-              diagnostics: number;
+              leads: number;
+            diagnostics: number;
               paid_customers: number;
               revenue: unknown[];
             };
@@ -373,7 +374,13 @@ test("Contrato comercial firmado: CRM, organización, pruebas, atribución y pag
             [org],
           )
         ).rows[0].r;
-        assert.equal(report.diagnostics, 1);
+        const secondReal=randomUUID();
+        await db.exec('reset role');
+        assert.equal((await send({...real,event_id:'diagnostic:'+secondReal,external_id:secondReal,journey:{...real.journey,capture_id:secondReal}})).status,200);
+        await db.exec('set role authenticated');
+        report=(await db.query<{r:typeof report}>('select crm_commercial_report($1) r',[org])).rows[0].r;
+        assert.equal(report.leads,1);
+        assert.equal(report.diagnostics, 2);
         assert.equal(report.paid_customers, 1);
         assert.equal(report.revenue.length, 1);
         await db.exec("reset role");

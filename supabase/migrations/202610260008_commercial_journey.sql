@@ -50,7 +50,7 @@ create or replace function public.crm_commercial_report(p_org uuid,p_brand uuid 
 declare result jsonb;begin
  if not exists(select 1 from public.organization_members where organization_id=p_org and user_id=auth.uid()) then raise exception 'Member required' using errcode='42501';end if;
  select jsonb_build_object(
- 'leads',(select count(*) from public.crm_leads where organization_id=p_org and (p_brand is null or brand_id=p_brand) and not is_test and capture_metadata?'diagnostic'),
+ 'leads',(select count(distinct contact_id) from public.crm_leads where organization_id=p_org and (p_brand is null or brand_id=p_brand) and not is_test and capture_metadata?'diagnostic'),
  'diagnostics',count(distinct lead_id) filter(where kind='diagnostic.completed'),
  'emails_accepted',count(*) filter(where kind='email.accepted'),
  'trials_started',count(distinct data->>'subscription_id') filter(where kind='trial.started'),
