@@ -1,3 +1,4 @@
+import { webhookConfigurationIssues } from "./configuration-diagnostics";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -20,6 +21,7 @@ export async function signedIngestion(
         request_id: requestId,
         status: 503,
         code: "NOT_CONFIGURED",
+        configuration_issues: webhookConfigurationIssues(process.env),
       }),
     );
     return Response.json(

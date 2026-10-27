@@ -45,3 +45,9 @@ Las migraciones finales son reaplicables y sus pruebas verifican que conservan d
 `npm run test:commercial-pair` requiere también el repositorio CEO con sus dependencias en `../ceo-rentable-vsc`, o indicar `CEO_REPO_PATH`. Ejecuta dos PostgreSQL locales y el emisor/receptor reales con HMAC, usando fixtures solo para Meta/PayPal/Resend. Comprueba contacto/marca, diagnóstico, UTMs, correo aceptado, prueba, pago y métricas. No escribe Supabase real ni envía emails/cargos. Las pruebas de cada repositorio también se ejecutan de forma independiente en CI.
 
 Pendiente de operación real: migraciones/configuración, captura de prueba recibida en CRM, correo en bandeja, activación/cobro sandbox y Meta Events Manager. Las secuencias 0/2/4/7/9 están preparadas en CEO pero no tienen envío promocional activo. No se declara listo el primer anuncio hasta confirmar ese recorrido con las instalaciones existentes.
+
+## Si el receptor sigue devolviendo 503 después de guardar variables
+
+El mensaje `Integración CRM no configurada` se genera antes de consultar Supabase. Revisar el proyecto **espinal-guerra-ai-os**, ámbito **Production**, y que el deployment con esas variables esté Ready. El log privado de servidor `crm_webhook / NOT_CONFIGURED` incluye `configuration_issues`: solo nombres de variables y razones fijas (`missing`, `https_required`, `min_32_characters`), nunca valores ni longitudes de claves. La respuesta pública conserva únicamente el error genérico y request_id.
+
+Vercel → proyecto → Logs → buscar el request_id de la comprobación. Compartir solo `configuration_issues`, sin capturas de los valores de variables. Esto permite localizar el bloqueo sin cambiar SQL, organizaciones ni Meta. Una respuesta 401 a una petición sin firma confirma únicamente que la comprobación inicial de configuración pasó; todavía falta verificar firma válida, credenciales de base y recepción real.
